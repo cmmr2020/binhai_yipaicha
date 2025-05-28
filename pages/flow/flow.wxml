@@ -1,0 +1,2 @@
+<!--pages/flow/flow.wxml-->
+<web-view src="{{flow_src}}"></web-view>

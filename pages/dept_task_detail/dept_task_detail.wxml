@@ -1,0 +1,236 @@
+<view class="cu-bar bg-white-user  solid-bottom  ">
+  <view class="text-sm1 text-bold">
+    <!--  <text class="cuIcon-title text-blue "></text>{{pointName}} -->
+    <text class="cuIcon-favor text-{{bgColor}} " style="font-size:{{fontSize}}rpx"></text><text style="font-size:{{fontSize35}}rpx">{{locationName}}</text>
+  </view>
+
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">信息描述:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{remarks}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">上报时间:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{findTime}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">责任单位:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{departmentName}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">上报点位:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{locationName}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">位置描述:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{address}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">信息类型:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{sortListStr}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">整改期限:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{finishTime}}</text>
+</view>
+<view class="cu-form-group " wx:if="{{auditContent}}">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">审批意见:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{auditContent}}</text>
+</view>
+<!-- 举报图片/视频 -->
+<view class="cu-bar  solid-bottom bg-white-user">
+  <view class="action">
+    <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改上传</text>
+  </view>
+</view>
+<view class="padding bg-white text-center">
+  <view wx:for="{{que_res_img}}" wx:key="index">
+    <view class="padding solids">
+      <view class="grid col-2 grid-square flex-sub">
+        <view class="solids bg-img"  bindtap="ViewMedia" data-url="{{que_res_img[index].url}}" data-type="0">
+          <image src='{{que_res_img[index].url}}' mode='aspectFill' style="max-width: 100%;">
+            <view class="cu-tag badge">问题</view>
+          </image>
+        </view>
+        <view class="solids bg-img">
+          <view wx:if="{{zgResMap[que_res_img[index].id]}}">
+            <image src="{{zgResMap[que_res_img[index].id].url}}" mode='aspectFill' style="max-width: 100%;" bindtap="ViewMedia" data-url="{{zgResMap[que_res_img[index].id].url}}" data-type="0">
+              <view hidden="{{isTijiao || tabCur!=0}}" style="left: 0px;" class="cu-tag2 bg-red" catchtap="DelImg" data-quesResId="{{que_res_img[index].id}}" data-type="0">
+                <text class="cuIcon-close"></text>
+              </view>
+              <view class="cu-tag badge">整改</view>
+            </image>
+          </view>
+          <!--bindtap="showModal2"-->
+          <view wx:else>
+            <view wx:if="{{isTijiao}}" style="text-align: center;">
+              <text class="cuIcon-time" style="font-size: 200rpx;"></text>
+              <view class="cu-tag badge">未上传整改</view>
+            </view>
+            <view wx:else bindtap="ChooseImage" data-quesResId="{{que_res_img[index].id}}" data-target="Modal" data-type="report" style="text-align: center;">
+              <text class="cuIcon-cameraadd" style="font-size: 200rpx;"></text>
+              <view class="cu-tag badge">整改</view>
+            </view>
+          </view>
+        </view>
+        <!--countdown-->
+      </view>
+    </view>
+  </view>
+  <view wx:for="{{que_res_video}}" wx:key="index">
+    <view class="padding solids">
+      <view class="grid col-2 grid-square flex-sub">
+        <view class="solids bg-img" bindtap="ViewVideoForreport" data-url="{{que_res_video[index].url}}" data-index="{{index}}">
+          <video style="max-width: 100%;height: 160px;" id='reportVideo{{index}}' src="{{que_res_video[index].url}}" poster="{{que_res_video[index].poster}}" bindfullscreenchange="start">
+            <view class="cu-tag badge" style=" margin-top: 4%;">问题</view>
+          </video>
+        </view>
+        <view class="solids bg-img">
+          <view wx:if="{{zgResMap[que_res_video[index].id]}}" bindtap="ViewVideoForreport" data-url="{{zgResMap[que_res_video[index].id].url}}" data-type="2" data-index="{{index}}">
+            <video style="max-width: 100%;height: 160px;" src="{{zgResMap[que_res_video[index].id].url}}" poster="{{zgResMap[que_res_video[index].id].poster}}" data-type="0">
+              <view hidden="{{isTijiao || tabCur!=0}}" style="left: 0px;" class="cu-tag2 bg-red" catchtap="DelImg" data-quesResId="{{que_res_video[index].id}}" data-type="2">
+                <text class="cuIcon-close"></text>
+              </view>
+              <view class="cu-tag badge" style=" margin-top: 4%;">整改</view>
+            </video>
+          </view>
+          <view wx:else>
+            <view wx:if="{{isTijiao}}" style="text-align: center;">
+              <text class="cuIcon-time" style="font-size: 200rpx;"></text>
+              <view class="cu-tag badge">未上传整改</view>
+            </view>
+            <view wx:else bindtap="chooseVideo" data-target="Modal" data-type="report" style="text-align: center;" data-quesResId="{{que_res_video[index].id}}">
+              <text class="cuIcon-cameraadd" style="font-size: 200rpx;"></text>
+              <view class="cu-tag badge">整改</view>
+            </view>
+          </view>
+        </view>
+        <!--countdown2-->
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 定位信息 -->
+<!-- <view wx:if="{{showAddress}}">
+  <view class="cu-bar  solid-bottom bg-white-user">
+    <view class="action">
+      <text class="cuIcon-title text-{{bgColor}}" style="font-size:{{fontSize}}rpx"></text><text style="font-size:{{fontSize}}rpx">定位信息</text>
+    </view>
+  </view>
+  <view class="cu-bar bg-white text-center padding-neirong">
+    <view class="action text-black " bindtap="go">
+      <text style="font-size:{{fontSize}}rpx">{{address}}　</text>
+      <text class="cuIcon-locationfill lg text-{{bgColor}}"></text>
+    </view>
+  </view>
+</view> -->
+
+<!-- 整改说明 -->
+<view wx:if="{{tabCur!=0}}">
+<view class="cu-bar  solid-bottom bg-white-user" >
+  <view class="action">
+    <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改说明</text>
+  </view>
+</view>
+<!-- !!!!! placeholder 在ios表现有偏移 建议使用 第一种样式 -->
+<view  wx:if="{{commitContent==''}}" class="cu-form-group" style="pointer-events: none;">
+  <textarea style="font-size:{{fontSize28}}rpx">　无</textarea>
+</view>
+<view  wx:else class="cu-form-group " style="pointer-events: none;">
+  <textarea wx:if="{{commitContent}}" style="font-size:{{fontSize28}}rpx">{{commitContent}}</textarea>
+  <textarea wx:else="" style="font-size:{{fontSize28}}rpx">无</textarea>
+</view>
+<view  class="cu-bar-user">
+</view>
+</view>
+<!-- 审批意见 -->
+<!-- <view wx:if="{{(tabCur == 0  && auditType != null) || tabCur == 3 }}">
+  <view hidden="{{checkShow}}" class="cu-bar  solid-bottom bg-white-user">
+    <view class="action">
+      <text class="cuIcon-title text-blue"></text><text style="font-size:{{fontSize}}rpx">审批意见</text>
+    </view>
+  </view> -->
+  <!-- !!!!! placeholder 在ios表现有偏移 建议使用 第一种样式 -->
+  <!-- <view hidden="{{checkShow}}" class="cu-form-group ">
+    <textarea wx:if="{{auditContent}}" style="font-size:{{fontSize28}}rpx">{{auditContent}}</textarea>
+    <textarea wx:else="" style="font-size:{{fontSize28}}rpx">无</textarea>
+  </view>
+  <view hidden="{{checkShow}}" class="cu-bar-user">
+  </view>
+</view> -->
+<!--上传部分  待整改和长期整改状态显示-->
+<view wx:if="{{tabCur == 0 || tabCur ==2}}">
+  <!-- 整改说明 -->
+  <view class="cu-bar  solid-bottom">
+    <view class="action">
+      <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改说明</text>
+    </view>
+  </view>
+  <!-- !!!!! placeholder 在ios表现有偏移 建议使用 第一种样式 -->
+  <view class="cu-form-group {{isTijiao ==true?'untijiao':''}}">
+    <!--   <textarea maxlength="-1"  bindinput="textareaAInput" placeholder="提供针对此类问题长效管理措施说明" ></textarea> -->
+    <textarea maxlength="-1" bindinput="textareaAInput" data-actionType="0" bindblur="changeTask" value="{{commitContent}}" placeholder="{{modalName=='Modal1' ?' ' : '提供针对此类问题长效管理措施说明'}}" style="font-size:{{fontSize28}}rpx" confirm-type='done'></textarea>
+  </view>
+  <view class="padding-xl_user" hidden="{{!isTijiao}}">
+    <button data-actionType="1" bindtap="changeTask" class="cu-btn  block bg-{{bgColor}} margin-tb-sm lg" style="font-size:{{fontSize}}rpx">提交</button>
+  </view>
+</view>
+
+<!-- 时间线-->
+<view class="cu-modal {{modalName=='TaskLog'?'show':''}}">
+  <view class="cu-dialog">
+    <view class="cu-bar bg-white justify-end">
+      <view class="content">整改记录</view>
+      <view class="action" bindtap="hideModal">
+        <text class="cuIcon-close text-red"></text>
+      </view>
+    </view>
+    <scroll-view scroll-y style="text-align: left;max-height: 900rpx;">
+      <view class="cu-timeline" wx:for="{{task_log_list}}" wx:key="task_log_index">
+        <view class="cu-item" style="color:{{bgColor}} ;">
+          <view class="content padding-xl radius shadow shadow-lg bg-white margin-top">
+            <view class="cu-capsule radius">
+              <view class="cu-tag bg-cyan">{{item.year}}</view>
+              <view class="cu-tag line-cyan">{{item.day}}</view>
+            </view>
+            <view class="margin-top"><text decode="{{true}}">{{item.recordBy}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{item.remarks}}</text></view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+</view>
+<view hidden="{{tabCur != 4}}">
+  <view>
+    <tui-divider gradual="{{true}}" gradualColor="{{gradualColor}}">
+      <text class="text-grey h1" style="font-size:{{fontSize35}}rpx">整改审核</text>
+    </tui-divider>
+  </view>
+  <!-- 审批意见 -->
+  <view class="cu-bar  solid-bottom bg-white-user">
+    <view class="action">
+      <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">审批意见</text>
+    </view>
+  </view>
+  <!-- !!!!! placeholder 在ios表现有偏移 建议使用 第一种样式 -->
+  <view class="cu-form-group ">
+    <textarea bindinput="set_auditContent" value="" style="font-size:{{fontSize28}}rpx" placeholder="请输入500字以内的审批意见"></textarea>
+  </view>
+  <!-- 审核按钮组 -->
+  <view class="flex solid-bottom padding justify-center" style="width: 100%;">
+    <view class=" margin-xs radius">
+      <button role="button" class="cu-btn bg-{{bgColor}} " bindtap="process_fun" data-resulttype="0">通过</button>
+    </view>
+    <view class=" margin-xs radius">
+      <button role="button" class="cu-btn bg-{{bgColor}} " bindtap="process_fun" data-resulttype="1">不通过</button>
+    </view>
+    <!-- <view class=" margin-xs radius">
+      <button role="button" class="cu-btn bg-{{bgColor}} " bindtap="process_fun" data-resulttype="2">长期整改</button>
+    </view> -->
+  </view>
+</view>
+<!--下边界-->
+<view class="cu-bar  solid-bottom bg-white-user" style="min-height: 40rpx;">
+</view>

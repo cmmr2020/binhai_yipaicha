@@ -1,0 +1,7 @@
+
+<view class='margin-xl bg-white padding-xl radius shadow-lg'>
+  <view class='text-center margin-bottom text-lg  text-grey'>关于易拍查小程序</view>
+  <view class='text-content'>
+    <view class='margin-top-sm'>　“易拍查”小程序由北京美兰德信息咨询有限公司研发并运行，是一个涵盖信息采集、审核、整改、分析于一体的小程序，我们致力于让问题检查、巡查、反馈工作更便捷高效。</view>
+  </view>
+</view>
