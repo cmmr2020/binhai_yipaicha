@@ -1,7 +1,4 @@
-page{
-  padding-bottom: 50px;
-}
-  .tower-swiper .tower-item {
+ .tower-swiper .tower-item {
 		transform: scale(calc(0.5 + var(--index) / 10));
 		margin-left: calc(var(--left) * 100rpx - 150rpx);
 		z-index: var(--index);
@@ -155,4 +152,10 @@ image.quiet {
 
 .container {
   display: flex;
+}
+
+.insideBt{
+  background-image: linear-gradient(to right, #25aae1, #4481eb, #04befe, #3f86ed);
+  font-size: x-large;
+  font-family: cursive;
 }

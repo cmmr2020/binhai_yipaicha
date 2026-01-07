@@ -1,5 +1,19 @@
 // pages/flow/flow.js
 var app = getApp()
+/**
+* params1： url
+* params2： 要获取参数
+*/
+function getQueryString(url, name){
+  var reg = new RegExp( name + '=([^&|/?]*)(&|/?|$)', 'i')
+  var r = url.match(reg)
+  if (r != null) {
+      // console.log("r = " + r)
+      // console.log("r[2] = " + r[2])
+      return r[1]
+  }
+  return null;
+}
 Page({
 
   /**
@@ -14,7 +28,16 @@ Page({
    */
   onLoad(options) {
     console.log(options)
-    this.login(options.code)
+    if(options.scene){
+      var url =  decodeURIComponent(options.scene);
+      console.log(url)
+      var code = getQueryString(url,'code');
+      console.log(code)
+      this.login(code)
+    }else if(options && options.code){
+      this.login(options.code)
+  }
+    
   },
 
   /**
@@ -34,6 +57,7 @@ Page({
     let that = this;
     var requestUrl = app.globalData.requestUrl;
     var appId = wx.getAccountInfoSync().miniProgram.appId;
+    wx.showLoading();
     wx.login({
       success(res) {
         if (res.code) {
@@ -50,6 +74,7 @@ Page({
               flowCode:flowCode
             },
             success(res) {
+              wx.hideLoading()
               console.log("请求用户：", res)
               if (res.data.status == 'success') {
                 res.data.retObj
@@ -62,6 +87,7 @@ Page({
         }
       },
       fail(res) {
+        wx.hideLoading()
         console.log('请求失败!')
         console.log(res)
       }

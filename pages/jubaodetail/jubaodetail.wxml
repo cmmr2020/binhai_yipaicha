@@ -1,49 +1,175 @@
-<scroll-view scroll-x class="bg-white  bg-mauve nav">
-  <view class="flex text-center ">
-    <view class="cu-item  flex-sub {{index==TabCur?'text-blue cur':'text-grey'}} cu-btn  round linebordersize" wx:for="{{tab}}" wx:key="index" bindtap="tabSelect" data-id="{{index}}">
-      {{tab[index]}}
+<scroll-view scroll-y ="true" enable-back-to-top="true"  scroll-into-view="{{cardId}}" 	scroll-into-view-offset="-200"	bindscrolltolower="loadMore" class="DrawerPage {{modalName=='viewModal'?'show':''}}">
+<view class="solid">
+  <!-- 导航栏-->
+  <scroll-view scroll-x class="bg-white nav text-center" scroll-with-animation scroll-left="{{scrollLeft}}">
+    <view class="flex text-center ">
+    <view class="cu-item flex-sub {{item.id==TabCur?'text-blue':'text-grey'}} cu-btn  round linebordersize {{}}" wx:for="{{tab}}" wx:key="index" bindtap="tabSelect" style="font-size:{{fontSize}}rpx" data-id="{{item.id}}">
+      {{item.name}}
+    </view>
+    </view>
+  </scroll-view>
+  <view class="text-right" style="margin-right: 1%;float: right;width: 45%;margin-top: 3%;"> 当前状态下信息总数为：{{pageCount}} </view>
+  <!-- 搜索图标 -->
+  <view class="cu-item" bindtap="showSearchModal" data-target="DrawerModalL" style="{{isNull=='true'?'position: fixed;z-index: 1000;':''}}">
+    <text class="cuIcon-search lg text-{{bgColor}}" style="font-size: 65rpx;position: fixed;right: 0rpx;margin-top: 150rpx;width:80rpx"></text>
+  </view>
+  <!-- 任务列表 -->
+    <view class="cu-card article" style="width: 100%;{{(TabCur==3 || TabCur==2) == true?'margin-top: 60rpx;':''}}">
+      <!--待审核-->
+      <view wx:if="{{TabCur==4}}" wx:for="{{quesList}}" wx:key="index2" class="cu-item shadow">
+        <!-- 任务列表 -->
+        <view class="flex solid-bottom padding justify-between">
+          <view class="action" style="width: 100%;">
+            <text class="cuIcon-news lg  text-{{bgColor}}" style="font-size:{{fontSize}}rpx;margin-left: 20rpx;margin-right:10rpx"></text>
+            <text class="text-blue" style="font-size:{{fontSize}}rpx">待审核</text>
+          </view>
+          <view class="cu-capsule round" style="margin-right: 1%;">
+            <view class="cu-tag bg-{{bgColor}}">No.</view>
+            <view class="cu-tag line-{{bgColor}}">{{index+1}}</view>
+          </view>
+        </view>
+        <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goDetailPage">
+          <view><text class="td-test" user-select="true">上报时间：{{item.creatTime}}</text></view>
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">信息类型：{{item.queSort || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">信息描述：{{item.remarks || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
+          <view class="divLine"></view>
+          <view>
+            <text class="td-test" user-select="true">责任单位：{{item.deptName || '待分配'}}</text>
+          </view>
+        </view>
+      </view>
+      <!--有效问题-->
+      <view wx:if="{{TabCur==1}}" wx:for="{{quesList}}" wx:key="index2" class="cu-item shadow">
+        <!-- 任务列表 -->
+        <view class="flex solid-bottom padding justify-between">
+          <view class="action" style="width: 100%;">
+            <text class="cuIcon-news lg  text-{{bgColor}}" style="font-size:{{fontSize}}rpx;margin-left: 20rpx;margin-right:10rpx"></text>
+            <text class="text-blue" style="font-size:{{fontSize}}rpx">有效信息</text>
+          </view>
+          <view class="cu-capsule round" style="margin-right: 1%;">
+            <view class="cu-tag bg-{{bgColor}}">No.</view>
+            <view class="cu-tag line-{{bgColor}}">{{index+1}}</view>
+          </view>
+        </view>
+        <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goDetailPage">
+          <view><text class="td-test" user-select="true">上报时间：{{item.creatTime}}</text></view>
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">信息类型：{{item.queSort || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">信息描述：{{item.remarks || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
+          <view class="divLine"></view>
+          <view>
+            <text class="td-test" user-select="true">责任单位：{{item.deptName || '待分配'}}</text>
+          </view>
+        </view>
+      </view>
+      <!--无效问题-->
+      <view wx:if="{{TabCur==0}}" wx:for="{{quesList}}" wx:key="index1" class="cu-item shadow">
+        <!-- 任务列表 -->
+        <view class="flex solid-bottom padding justify-between">
+          <view class="action" style="width: 100%;">
+            <text class="cuIcon-news lg  text-{{bgColor}}" style="font-size:{{fontSize}}rpx;margin-left: 20rpx;margin-right:10rpx"></text>
+            <text class="text-blue" style="font-size:{{fontSize}}rpx">无效信息</text>
+          </view>
+          <view class="cu-capsule round" style="margin-right: 1%;">
+            <view class="cu-tag bg-{{bgColor}}">No.</view>
+            <view class="cu-tag line-{{bgColor}}">{{index+1}}</view>
+          </view>
+        </view>
+        <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goDetailPage">
+          <view><text class="td-test" user-select="true">上报时间：{{item.creatTime}}</text></view>
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">信息类型：{{item.queSort || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">信息描述：{{item.remarks || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
+          <view class="divLine"></view>
+          <view>
+            <text class="td-test" user-select="true">责任单位：{{item.deptName || '待分配'}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+</view>
+</scroll-view>
+<!-- <view class="imagesize {{isNull==true?'show':'hide'}}">
+  <image src='../../images/null.png' mode='scaleToFill' style='height:100%;width:100%'></image>
+</view> -->
+<!-- 搜索弹窗抽屉-->
+<view class="cu-modal drawer-modal justify-start {{modalName=='DrawerModalL'?'show':''}}" bindtap="hideModal">
+  <view class="cu-dialog basis-lg" catchtap style="top:{{CustomBar}}px;height:calc(100vh - {{CustomBar}}px)">
+    <view class="cu-list menu text-left">
+      <form>
+        <view class="cu-form-group">
+          <input placeholder="信息类型" data-type="sort" bindblur="task_code_input" value="{{task_request_dataParam.qsort}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="信息描述" data-type="remarks" bindblur="task_code_input" value="{{task_request_dataParam.remarks}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="点位" data-type="location" bindblur="task_code_input" value="{{task_request_dataParam.locationName}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="上报地点" data-type="address" bindblur="task_code_input" value="{{task_request_dataParam.address}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="责任单位" data-type="departmentName" bindblur="task_code_input" value="{{task_request_dataParam.deptNames}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="地理位置" data-type="addRemark" bindblur="task_code_input" value="{{task_request_dataParam.addRemark}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <picker mode="date" value="{{task_request_dataParam.startTime}}" start="2017-01-01" end="2050-12-30" bindchange="DateChange" data-type="0">
+            <view class="picker" style="text-align: left;font-size: 30rpx;">
+              开始日期: {{task_request_dataParam.startTime}}
+            </view>
+          </picker>
+        </view>
+        <view class="cu-form-group">
+          <picker mode="date" value="{{task_request_dataParam.endTime}}" start="2017-01-01" end="2050-12-30" bindchange="DateChange" data-type="1">
+            <view class="picker" style="text-align: left;font-size: 30rpx;">
+              结束日期: {{task_request_dataParam.endTime}}
+            </view>
+          </picker>
+        </view>
+        <view class="cu-form-group">
+          <button bindtap="clean_date" role="button" class="cu-btn bg-{{bgColor}} margin-tb-sm lg" aria-disabled="false" style="width: 100%;">清空日期</button>
+        </view>
+        <view class="cu-form-group">
+          <button bindtap="search_fun" role="button" class="cu-btn bg-{{bgColor}} margin-tb-sm lg" aria-disabled="false" style="width: 100%;">搜索</button>
+        </view>
+      </form>
     </view>
   </view>
-</scroll-view>
-<!-- 待审核、已退回任务列表 -->
- <view class="cu-card article">
- <!-- 这里finishList代表已退回、待审核数据。和字面意思相反 -->
-    <navigator wx:for="{{finishList}}" wx:key="index" class="cu-item shadow" url='../back/back?id={{item.answerId}}'>
-
-      <view class="content">
-        <image src="{{item.imageUrl=='' ? '/images/null.png' : item.imageUrl}}" mode="aspectFill"></image>
-        <view class="desc">
-          <view class="text-bold text-content1 box">{{item.describe}}</view>
-          <view class='text-content text-cut box'>点位名称：{{item.locationName ==null?"无":item.locationName}}</view>
-          <view class='text-content text-cut box'>位置信息：{{item.addr == null?"无":item.addr}}</view>
-          <view>
-            <view class='cu-tag bg-grey light sm round'>{{item.findTime}}
-            </view>
-          </view>
-        </view>
-      </view>
-    </navigator>
-  </view>
-
-<!-- 处理中、已完成任务列表 -->
- <view class="cu-card article">
- <!-- 这里backList代表处理中、已完成数据。和字面意思相反 -->
-    <navigator wx:for="{{backList}}" wx:key="index" class="cu-item shadow" url='../finish/finish?id={{item.taskId}}'>
-
-      <view class="content">
-        <image src="{{item.imageUrl=='' ? '/images/null.png' : item.imageUrl}}" mode="aspectFill"></image>
-        <view class="desc">
-          <view class="text-bold text-content1 box">{{item.describe}}</view>
-          <view class='text-content text-cut box'>点位名称：{{item.locationName ==null?"无":item.locationName}}</view>
-          <view class='text-content text-cut box'>位置信息：{{item.addr == null?"无":item.addr}}</view>
-          <view>
-            <view class='cu-tag bg-grey light sm round'>{{item.findTime}}
-            </view>
-          </view>
-        </view>
-      </view>
-    </navigator>
-  </view>
-<view class="imagesize {{isNull=='true'?'show':'hide'}}">
-  <image src='/images/null.png' mode='scaleToFill' style='height:100%;width:100%' ></image>
 </view>

@@ -10,12 +10,16 @@
   <text class="item-left" style="font-size:{{fontSize28}}rpx">{{departmentName}}</text>
 </view>
 <view class="cu-form-group ">
-  <view class="title text-bold" style="font-size:{{fontSize}}rpx">信息描述:</view>
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">问题信息描述:</view>
   <text class="item-left" style="font-size:{{fontSize28}}rpx">{{questionContent}}</text>
 </view>
 <view class="cu-form-group ">
   <view class="title text-bold" style="font-size:{{fontSize}}rpx">上报时间:</view>
   <text class="item-left" style="font-size:{{fontSize28}}rpx">{{findTime}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">点位类型:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{pointName}}</text>
 </view>
 <view class="cu-form-group ">
   <view class="title text-bold" style="font-size:{{fontSize}}rpx">上报点位:</view>
@@ -27,7 +31,7 @@
 </view>
 
 <view class="cu-form-group ">
-  <view class="title text-bold" style="font-size:{{fontSize}}rpx">信息类型:</view>
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">问题类型:</view>
   <text class="item-left" style="font-size:{{fontSize28}}rpx">{{sortListStr}}</text>
 </view>
 <view class="cu-form-group ">
@@ -96,10 +100,10 @@
     </view>
   </view>
 </view>
-<!-- 整改说明 -->
+<!-- 整改描述 -->
 <view hidden="{{checkShow}}" class="cu-bar  solid-bottom bg-white-user">
   <view class="action">
-    <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改说明</text>
+    <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改描述</text>
   </view>
 </view>
 <!-- !!!!! placeholder 在ios表现有偏移 建议使用 第一种样式 -->
@@ -107,7 +111,7 @@
   <textarea style="font-size:{{fontSize28}}rpx">　</textarea>
 </view>
 <view hidden="{{checkShow}}" wx:else class="cu-form-group "  style="pointer-events: none;">
-  <textarea wx:if="{{commitContent}}" style="font-size:{{fontSize28}}rpx">{{commitContent}}</textarea>
+  <textarea wx:if="{{commitContent}}" value="{{commitContent}}" style="font-size:{{fontSize28}}rpx"></textarea>
   <textarea wx:else="" style="font-size:{{fontSize28}}rpx"></textarea>
 </view>
 <!-- 整改时间 -->
@@ -160,7 +164,7 @@
   </view>
 
 </view>
-<view>
+<view hidden="{{tabCur == 9}}">
   <view>
     <tui-divider gradual="{{true}}" gradualColor="{{gradualColor}}">
       <text class="text-grey h1" style="font-size:{{fontSize35}}rpx">整改审核</text>

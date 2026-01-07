@@ -1,4 +1,5 @@
-<scroll-view scroll-y class="DrawerPage {{modalName=='viewModal'?'show':''}}" style="padding-bottom: 15%">
+<!-- <scroll-view scroll-y class="DrawerPage {{modalName=='viewModal'?'show':''}}" style="padding-bottom: 15%"> -->
+<scroll-view scroll-y ="true" enable-back-to-top="true"  scroll-into-view="{{cardId}}" 	scroll-into-view-offset="-200"	bindscrolltolower="loadMore" class="DrawerPage {{modalName=='viewModal'?'show':''}}">
 <view class="solid">
   <!-- 导航栏-->
   <scroll-view scroll-x class="bg-white nav text-center" scroll-with-animation scroll-left="{{scrollLeft}}">
@@ -6,8 +7,9 @@
       {{item.name}}
     </view>
   </scroll-view>
+  <view class="text-right" style="margin-right: 1%;float: right;width: 45%;margin-top: 3%;"> 当前状态下任务总数为：{{pageCount}} </view>
   <!-- 批量审核按钮组 -->
-  <view wx:if="{{TabCur==3 || TabCur==2 || TabCur==4}}" class="flex solid-bottom padding justify-end" style="position: fixed;z-index: 1000;width: 100%;">
+  <view wx:if="{{TabCur==3 || TabCur==2 || TabCur==4}}" class="flex solid-bottom padding justify-end" style="position: fixed;z-index: 1000;width: 55%;">
     <view class=" margin-xs radius" wx:if="{{TabCur==3 || TabCur==2}}">
       <button role="button" class="cu-btn bg-{{bgColor}} " bindtap="show_auditContent_modal" data-type="0">批量通过</button>
     </view>
@@ -25,15 +27,19 @@
   </view>
    <!-- 整改单列表图标 -->
   <view wx:if="{{isShow == 1}}"  class="cu-item" bindtap="showListModel" data-target="viewModal">
-    <text class="cuIcon-copy lg text-{{bgColor}}" style="font-size: 50rpx;position: fixed;right: 5rpx;margin-top: 100rpx;"></text>
+    <text class="cuIcon-copy lg text-{{bgColor}}" style="font-size: 65rpx;position: fixed;right: 0rpx;margin-top: 310rpx;width:80rpx"></text>
+  </view>
+    <!-- 整改时间正倒序显示 -->
+  <view wx:if="{{TabCur==9}}" class="cu-item"  data-target="viewModal" bindtap="search_finishSort">
+    <text class="cuIcon-order lg text-{{bgColor}}" style="font-size: 65rpx;position: fixed;right: 0rpx;margin-top: 230rpx;width:80rpx"></text>
   </view>
   <!-- 搜索图标 -->
   <view class="cu-item" bindtap="showSearchModal" data-target="DrawerModalL" style="{{isNull=='true'?'position: fixed;z-index: 1000;':''}}">
-    <text class="cuIcon-search lg text-{{bgColor}}" style="font-size: 50rpx;position: fixed;right: 5rpx;margin-top: 180rpx;"></text>
+    <text class="cuIcon-search lg text-{{bgColor}}" style="font-size: 65rpx;position: fixed;right: 0rpx;margin-top: 150rpx;width:80rpx"></text>
   </view>
   <!-- 任务列表 -->
   <checkbox-group bindchange="save_taskIds">
-    <view class="cu-card article" style="{{(TabCur==3 || TabCur==2) == true?'margin-top: 60rpx;':''}}">
+    <view class="cu-card article" style="width: 100%;{{(TabCur==3 || TabCur==2) == true?'margin-top: 60rpx;':''}}">
       <!--初次待审核-->
       <view wx:if="{{TabCur==3}}" wx:for="{{taskList}}" wx:key="index2" class="cu-item shadow">
         <!-- 任务列表 -->
@@ -51,16 +57,24 @@
           </view>
         </view>
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goDetailPage">
-          <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
-          <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <view><text class="td-test" user-select="true">上报时间：{{item.findTime}}</text></view>
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题类型：{{item.sortListStr || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">上报点位：{{item.locationName == null? '无':item.locationName}}</text></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">位置描述：{{item.address == null? '无':item.address}}</text></view>
+          <view><text class="td-test" user-select="true">点位类型：{{item.pointName || '无'}}</text></view>
           <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <!-- <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view> -->
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
           <view class="divLine"></view>
           <view wx:if="{{item.departmentTaskVoList}}">
             <text class="td-test">责任单位：</text>
@@ -100,7 +114,10 @@
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goDetailPage">
           <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
           <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">点位类型：{{item.pointName || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
           <view><text class="td-test" user-select="true">上报点位：{{item.locationName == null? '无':item.locationName}}</text></view>
@@ -144,15 +161,24 @@
           </view>
         </view>
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goDetailPage">
-          <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
-          <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <view><text class="td-test" user-select="true">上报时间：{{item.findTime}}</text></view>
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题类型：{{item.sortListStr || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">上报点位：{{item.locationName == null? '无':item.locationName}}</text></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">位置描述：{{item.address == null? '无':item.address}}</text></view>
+          <view><text class="td-test" user-select="true">点位类型：{{item.pointName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <!-- <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view> -->
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
           <view wx:if="{{item.departmentTaskVoList}}">
@@ -172,6 +198,9 @@
           <view wx:else="">
             <text class="td-test" user-select="true">责任单位：{{item.departmentName}}</text>
           </view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">整改期限：{{item.finishTime}}</text></view>
         </view>
       </view>
       <!-- 长期整改-->
@@ -191,7 +220,10 @@
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goDetailPage">
           <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
           <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">点位类型：{{item.pointName || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
           <view><text class="td-test" user-select="true">上报点位：{{item.locationName == null? '无':item.locationName}}</text></view>
@@ -233,15 +265,24 @@
           </view>
         </view>
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goDetailPage">
-          <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
-          <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <view><text class="td-test" user-select="true">上报时间：{{item.findTime}}</text></view>
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题类型：{{item.sortListStr || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">上报点位：{{item.locationName == null? '无':item.locationName}}</text></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">位置描述：{{item.address == null? '无':item.address}}</text></view>
+          <view><text class="td-test" user-select="true">点位类型：{{item.pointName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <!-- <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view> -->
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
           <view wx:if="{{item.departmentTaskVoList}}">
@@ -280,7 +321,10 @@
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" data-deptid="{{item.departmentId}}" bindtap="goDetailPage">
           <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
           <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks == null?'无':item.remarks}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">点位类型：{{item.pointName || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
           <view><text class="td-test" user-select="true">上报点位：{{item.locationName == null? '无':item.locationName}}</text></view>
@@ -340,20 +384,23 @@
   <view class="cu-dialog basis-lg" catchtap style="top:{{CustomBar}}px;height:calc(100vh - {{CustomBar}}px)">
     <view class="cu-list menu text-left">
       <form>
-        <!-- <view class="cu-form-group margin-top">
-          <input placeholder="请输入任务编号" data-type="code" bindblur="task_code_input" value="{{task_request_dataParam.taskCode}}"></input>
-        </view> -->
-        <!-- <view class="cu-form-group">
-          <input placeholder="请输入点位类型" data-type="point" bindblur="task_code_input" value="{{task_request_dataParam.pointName}}"></input>
-        </view> -->
         <view class="cu-form-group">
-          <input placeholder="请输入点位名称" data-type="location" bindblur="task_code_input" value="{{task_request_dataParam.locationName}}"></input>
+          <input placeholder="问题类型" data-type="sort" bindblur="task_code_input" value="{{task_request_dataParam.sortName}}"></input>
         </view>
-        <!-- <view class="cu-form-group">
-          <input placeholder="请输入问题" data-type="question" bindblur="task_code_input" value="{{task_request_dataParam.question}}"></input>
-        </view> -->
         <view class="cu-form-group">
-          <input placeholder="请输入责任单位" data-type="deptname" bindblur="task_code_input" value="{{task_request_dataParam.departmentName}}"></input>
+          <input placeholder="问题信息描述" data-type="remarks" bindblur="task_code_input" value="{{task_request_dataParam.remarks}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="点位类型" data-type="point" bindblur="task_code_input" value="{{task_request_dataParam.pointName}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="点位" data-type="location" bindblur="task_code_input" value="{{task_request_dataParam.locationName}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="上报地点" data-type="address" bindblur="task_code_input" value="{{task_request_dataParam.address}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="责任单位" data-type="departmentName" bindblur="task_code_input" value="{{task_request_dataParam.departmentName}}"></input>
         </view>
         <!-- <view class="cu-form-group">
           <picker mode="date" value="{{task_request_dataParam.date}}" start="2017-01-01" end="2050-12-30" bindchange="DateChange">

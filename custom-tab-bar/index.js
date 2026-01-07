@@ -2,19 +2,20 @@
 Component({
   data: {
     rightId: wx.getStorageSync('rightId') || 0,
-    list: [{
+    list: [
+      // {
+      //   "pagePath": "/pages/public_jubao/public_jubao",
+      //   "text": "公众上报",
+      //   "iconPath": "../images/camera.png",
+      //   "selectedIconPath": "../images/camera1.png"
+      // },
+      {
       "pagePath": "/pages/user/user",
       "text": "个人中心",
       "iconPath": "../images/user.png",
       "selectedIconPath": "../images/user1.png"
     }],
     list1: [
-      // {
-      //   "pagePath": "/pages/check_project/check_project",
-      //   "text": "上报",
-      //   "iconPath": "../images/camera.png",
-      //   "selectedIconPath": "../images/camera1.png"
-      // },
       {
         "pagePath": "/pages/dept_type_task_index/dept_type_task_index",
         "text": "整改上报",
@@ -29,12 +30,6 @@ Component({
       }
     ],
     list2: [
-      // {
-      //   "pagePath": "/pages/jubao/jubao",
-      //   "text": "上报",
-      //   "iconPath": "../images/camera.png",
-      //   "selectedIconPath": "../images/camera1.png"
-      // },
       {
         "pagePath": "/pages/examine_project/examine_project",
         "text": "整改审核",
@@ -144,7 +139,7 @@ Component({
     })
   },
   detached() {
-    app.eventBus.off('rightChange')
+    getApp().eventBus.off('rightChange')
   },
   methods: {
     changeList() {

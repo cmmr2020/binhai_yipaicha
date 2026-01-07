@@ -1,7 +1,9 @@
-<cu-custom bgColor="bg-gradual-blue" isBack="{{true}}">
+<!-- 自定义返回按钮  json 配置"navigationStyle": "custom",
+-->
+<!-- <cu-custom bgColor="bg-gradual-blue" isBack="{{true}}">
   <view slot="backText" bind:tap="goback">返回</view>
   <view slot="content">上报</view>
-</cu-custom>
+</cu-custom> -->
 <!-- 地图 -->
 <view class="container padding bg-white " hover-stop-propagation="false" hover-class="none">
   <!-- 地图控件 -->
@@ -15,7 +17,7 @@
 <!-- 地址定位 -->
 <view class="cu-bar  solid-bottom">
   <view class="action">
-    <text class="cuIcon-title text-blue"></text>上报位置
+    <text class="cuIcon-title text-blue"></text>上报地点
   </view>
   <view class="action">
     <button class="cu-btn bg-blue shadow" catchtap="manualLocation">手动定位</button><text>　</text>
@@ -30,10 +32,29 @@
 <view class="cu-form-group  bg-white" style="pointer-events: none;">
   <textarea class="weui-input" value="{{address}}"></textarea>
 </view>
+
+<!--点位类型-->
+<view class="cu-bar  solid-bottom">
+  <view class="action">
+    <text class="cuIcon-title text-blue"></text>点位类型
+  </view>
+</view>
+<!--点位类型下拉选-->
+<view class="cu-form-group  bg-white">
+  <view class="search-container">
+    <scroll-view scroll-y class="dropdown-list" hidden="{{!showDropdown2}}" style="height: {{dropdownHeight2}}px;">
+      <block wx:for="{{point_filteredList}}" wx:key="unique">
+        <view class="dropdown-item" bindtap="onItemTap2"  data-item="{{item}}">{{item.name}}</view>
+      </block>
+    </scroll-view>
+    <input class="weui-input" type="text"  bindinput="onSearchInput2"    placeholder="请输入点位类型关键字检索" value="{{inputValue2}}" confirm-type="done" />
+  </view>
+</view>
+
 <!--点位名称-->
 <view class="cu-bar  solid-bottom">
   <view class="action">
-    <text class="cuIcon-title text-blue"></text>点位名称
+    <text class="cuIcon-title text-blue"></text>上报点位
   </view>
 </view>
 <!--点位下拉选-->
@@ -44,7 +65,7 @@
         <view class="dropdown-item" bindtap="onItemTap"  data-item="{{item}}">{{item.name}}</view>
       </block>
     </scroll-view>
-    <input class="weui-input" type="text" confirm-type="search" bindinput="onSearchInput"  placeholder="请输入点位名称关键字检索" value="{{inputValue}}" confirm-type="done" />
+    <input class="weui-input" type="text"  bindinput="onSearchInput"    placeholder="请输入点位名称关键字检索" value="{{inputValue}}" confirm-type="done" />
   </view>
 </view>
 
@@ -52,10 +73,9 @@
 <view>
   <tui-toast id="tui-tips-ctx"></tui-toast>
 </view>
-
 <view class="cu-bar  solid-bottom">
   <view class="action">
-    <text class="cuIcon-title text-blue"></text>信息类型
+    <text class="cuIcon-title text-blue"></text>问题类型
   </view>
   <view class="action">
     <button class="cu-btn bg-blue shadow" bindtap="showModal" data-target="ChooseModal">选择</button>
@@ -192,7 +212,7 @@
 
 <view class="cu-bar  solid-bottom">
   <view class="action">
-    <text class="cuIcon-title text-blue"></text>信息描述
+    <text class="cuIcon-title text-blue"></text>问题信息描述
   </view>
 </view>
 <!-- !!!!! placeholder 在ios表现有偏移 建议使用 第一种样式 -->
@@ -246,6 +266,18 @@
     <text class="cuIcon-copy lg text-{{bgColor}}" style="font-size: 50rpx;position: fixed;right: 5rpx;margin-top: 100rpx;"></text>
   </view>
 </view>
+
+<!--单位标签-->
+<view class="cu-bar  solid-bottom">
+  <view class="action">
+    <text class="cuIcon-title text-blue"></text>地理位置
+  </view>
+</view>
+<view class="cu-form-group  bg-white">
+  <input class="weui-input" type="text" placeholder=""   confirm-type="done"  bindinput="setAddRemark"  value="{{addRemark}}" />
+</view>
+
+
 <view class="{{modalName=='deptModal'?'show':'hide'}}" style="z-index: 1111;position: fixed;top: 93.5%; text-align: center;width: 100%;">
       <button class="cu-btn lg button-hover" style="background-color:#0075c1;color: white; width: 50%;" role="button"
         aria-disabled="false" bindtap="hideModal" data-target="RadioModal">完成</button>
@@ -262,7 +294,6 @@
 <view class="margin-tb-sm text-center">
   <button hidden="{{hiddenUser}}" class="cu-btn round bg-blue lg shadow" bindtap='submit_syn' style="width: 50%;margin-top: 2%;">提交</button>
 </view>
-
 
 
 

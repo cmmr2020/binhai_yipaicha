@@ -43,8 +43,8 @@
     "useCompilerPlugins": false
   },
   "compileType": "miniprogram",
-  "libVersion": "3.5.5",
-  "appid": "wxa677dcf2b71eae4b",
+  "libVersion": "3.10.0",
+  "appid": "wxe5c041d9b3b05b6f",
   "projectname": "wx-yipaicha",
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},

@@ -4,6 +4,7 @@ const util = require('../../utils/util_time.js')
 var app = getApp()
 //各tab参数 
 var request_dataParam_map = new Map();
+var finishTimeSortType = -1; 
 Page({
   data: {
     rightId:wx.getStorageSync('rightId') || 0,
@@ -143,7 +144,7 @@ Page({
       }
       that.setData({
         taskList: [],
-        pagenum:1,
+        pageNum:1,
         maxPageNum: 0, //总页数
         isNull: '',
         TabCur:TabCur
@@ -370,7 +371,7 @@ Page({
     //当前tab
     if (TabCur >= 0) {
       that.data.task_request_dataParam.projectId = projectId;
-      that.data.task_request_dataParam.pageNum = pageNum;
+      that.data.task_request_dataParam.page = pageNum;
       if (!pageSize) {
         that.data.task_request_dataParam.pageSize = 5;
       } else {
@@ -400,7 +401,7 @@ Page({
     //调用全局 请求方法
     app.wxRequest(
       'GET',
-      requestUrl + '/home/manage/getPublicFieldTaskCheckList',
+      requestUrl + '/home/manage/getPublicFieldTaskRectifyListByWX',
       that.data.task_request_dataParam,
       app.seesionId,
       (res) => {
@@ -429,20 +430,15 @@ Page({
               pageCount: res.data.retObj.count, //总任务数
               maxPageNum: res.data.retObj.pageCount, //总页数
               taskList: that.data.taskList.concat(arr),
-              modalName: ''
+              modalName: '',
+              cardId:pageScrollto_id==null?"":pageScrollto_id//如果id不为空 则为测评页面返回 定位到跳转之前的位置
             })
-            if(pageScrollto_id){//如果id不为空 则为测评页面返回 定位到跳转之前的位置
-              wx.pageScrollTo({
-                selector:'#'+pageScrollto_id,//选择器
-                offsetTop:-200,//偏移距离，需要和 selector 参数搭配使用，可以滚动到 selector 加偏移距离的位置，单位 px
-                duration: 0,//滚动动画的时长，单位 ms
-              })
-            }
             //console.log("待审核数据：", that.data.taskList)
           } else {
             that.setData({
               //isNull: 'true',
-              modalName: ''
+              modalName: '',
+              pageCount:0
             })
             app.msg('暂无数据')
           }
@@ -468,7 +464,7 @@ Page({
       //每次切换问题，清空问题列表
       taskList: [],
       //每次切换问题，给pagenum重新赋值为1
-      pagenum: 1
+      pageNum: 1
     })
     if (this.data.TabCur == 4) {
       this.getDissentFieldTaskList()
@@ -497,7 +493,7 @@ Page({
     }
     //当前tab
     that.data.task_request_dataParam.projectId = projectId;
-    that.data.task_request_dataParam.pageNum = pageNum;
+    that.data.task_request_dataParam.page = pageNum;
     if (!pageSize) {
       that.data.task_request_dataParam.pageSize = 5;
     } else {
@@ -557,9 +553,25 @@ Page({
       }
     )
   },
-
+  search_finishSort(){
+    var that = this;
+    var data_param;
+    if(finishTimeSortType == -1 || finishTimeSortType == 0){
+      finishTimeSortType = 1
+    }else{
+      finishTimeSortType == 0
+    }
+    if (request_dataParam_map.has(that.data.TabCur)) {
+      data_param = request_dataParam_map.get(that.data.TabCur)
+    } else {
+      data_param = {};
+    }
+    data_param.finishTimeSort = finishTimeSortType
+    request_dataParam_map.set(that.data.TabCur, data_param)
+    that.search_fun();
+  },
   //--------上拉函数-----------
-  onReachBottom: function () { //触底开始下一页
+  loadMore: function () { //触底开始下一页
     var that = this;
     var pagenum = that.data.pageNum + 1; //获取当前页数并+1
     var TabCur = that.data.TabCur;
@@ -688,18 +700,20 @@ Page({
     } else {
       data_param = {};
     }
-    if (type == 'code') {
-      data_param.taskCode = e.detail.value
-    } else if (type == 'location') {
-      data_param.locationName = e.detail.value
-    } else if (type == 'question') {
-      data_param.question = e.detail.value
+    if (type == 'sort') {
+      data_param.sortName = e.detail.value
+    } else if (type == 'remarks') {
+      data_param.remarks = e.detail.value
     } else if (type == 'point') {
       data_param.pointName = e.detail.value
-    } else if (type == 'deptname') {
+    } else if (type == 'location') {
+      data_param.locationName = e.detail.value
+    } else if (type == 'address') {
+      data_param.address = e.detail.value
+    } else if (type == 'departmentName') {
       data_param.departmentName = e.detail.value
     }
-    request_dataParam_map = request_dataParam_map.set(that.data.TabCur, data_param)
+    request_dataParam_map.set(that.data.TabCur, data_param)
   },
   //长按复制任务编号
   copyCode: function (e) {
@@ -745,12 +759,13 @@ Page({
     // 0批量通过  1批量不通过  2批量长期整改
     var result_type = e.currentTarget.dataset.resulttype
     var taskIds = that.data.batch_process_taskIdArr + ''
-    var auditContent = that.data.process_auditContent
-    if (!auditContent) {
-      app.msg('请输入审批意见~')
-      return
-    }
-    if (auditContent.length > 500) {
+    var auditContent = that.data.process_auditContent || ''
+    console.log(auditContent)
+    // if (!auditContent) {
+    //   app.msg('请输入审批意见~')
+    //   return
+    // }
+    if (!auditContent && auditContent.length > 500) {
       app.msg('审批意见不能超过500字')
       return
     }

@@ -26,12 +26,14 @@ Page({
       avatarUrl: defaultAvatarUrl,
       theme: wx.getSystemInfoSync().theme,
       modalName:'',
-      temp_userNickName:''
+      temp_userNickName:'',
+      isDcy:false,
   },
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(option) {
+    console.log(app)
     let that = this
     if(app.nickname){
       that.setData({
@@ -41,6 +43,11 @@ Page({
     if(app.headUrl){
       that.setData({
         headeSrcPath:app.headUrl
+      })
+    }
+    if(app.deptRoleName && app.deptRoleName == '调查员-P'){
+      that.setData({
+        isDcy:true
       })
     }
   },
@@ -131,7 +138,7 @@ bindGetUserInfo: function (res) {
     var that = this;
     var openid = that.data.openid;
     wx.navigateTo({
-      url:"../jubaodetail/jubaodetail?openid="+openid
+      url:"../user_record_project/user_record_project?openid="+openid
     })
   },
   goToLogin:function(){
@@ -237,7 +244,8 @@ bindGetUserInfo: function (res) {
 
   },
   loginOut(){
-    var requestUrl = this.data.requestUrl;
+    var that = this;
+    var requestUrl = that.data.requestUrl;
     wx.showModal({
       title: '提示',
       content: '您是否退出当前帐号?',
@@ -260,6 +268,10 @@ bindGetUserInfo: function (res) {
                   app.departmentName ='',//当前账号所属部门名称
                   app.terminalUserId ='',//登录用户id
                   app.terminalName ='',//登录用户名称
+                  app.deptRoleName = '',
+                  that.setData({
+                    isDcy:false
+                  })
                   //改变tabbar
                   wx.setStorageSync('rightId', 0)
                   app.changeUserRight()

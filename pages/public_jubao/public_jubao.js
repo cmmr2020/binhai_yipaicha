@@ -8,19 +8,19 @@ const app = getApp()
 const util = require('../../utils/util.js')
 
 const plugin = requirePlugin("WechatSI")
+
 // 获取**全局唯一**的语音识别管理器**recordRecoManager**
 const manager = plugin.getRecordRecognitionManager()
-var deptMap = new Map() //责任单位列表缓存map key id  value obj
+
 Page({
   data: {
+    rightId: wx.getStorageSync('rightId') || 0,
     requestUrl: '', //服务器路径
     address: "正在获取地址...",
     longitude: 116.397452,
     latitude: 39.909042,
     // key: 'W4WBZ-TUD65-IDAIR-QPM36-HMFQ5-CGBZP',
     key: 'MYQBZ-CZ2W3-N5Z3H-YM2RD-BNDGZ-HHB2O',
-    StatusBar: app.globalData.StatusBar,
-    CustomBar: app.globalData.CustomBar,
     //框架属性
     CustomBar: app.globalData.CustomBar,
     //分类显示判断标志
@@ -82,41 +82,18 @@ Page({
     //点位名称动态下拉选
     inputValue: '',
     showDropdown: false,
-    originalList: [], // 原始数据列表
-    filteredList: [], // 过滤后的数据列表
-    //点位类型名称动态下拉选
-    inputValue2: '',
-    showDropdown2: false,
-    point_originalList: [], // 原始点位类型数据列表
-    point_filteredList: [], // 过滤后的点位类型数据列表
-    dropdownHeight: 0, // 下拉列表的高度，根据内容动态调整
-    dropdownHeight2: 0, // 下拉列表的高度，根据内容动态调整
-    selectedLocation:{},//选中的点位对象
-    selectedPoint:{},//选中的点位对象
-    //点位名称动态下拉选结束
-    //责任单位名称动态下拉选
-    dept_inputValue: '',
-    dept_showDropdown: false,
-    dept_originalList: [], // 原始数据列表
-    dept_filteredList: [], // 过滤后的数据列表
-    dept_dropdownHeight: 0, // 下拉列表的高度，根据内容动态调整
-    selectedDept:{},//选中的责任单位对象
-    selectedDeptIsd:'',//选中的责任单位ids
-    //责任单位名称动态下拉选结束
+    storageLocationNameList:new Array(),//缓存中的点位名称
   },
+
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
-    console.log('onLoad')
-
     var requestUrl = app.globalData.requestUrl;
     var openid = app.openid;
-    var projectId = options.projectId
+    var projectId = wx.getStorageSync('projectId');
     var nickname = wx.getStorageSync('nickname');
-    var userId = app.terminalUserId;
-    // console.log("userId", userId)
-    // console.log("projectId", projectId)
+    console.log("projectId", projectId)
     if (nickname) {
       // console.log("有值")
       this.setData({
@@ -138,21 +115,16 @@ Page({
       key: this.data.key
     });
     this.currentLocation();
-  
-    this.getProblemType(projectId);
-    this.getPointList();
-    this.getLoctionList();
-    this.getDeptList(userId);
+    this.getProblemType();
   },
   onShow: function () {
-    console.log('onshow')
-    // let that = this;
-    // if (typeof this.getTabBar === 'function' &&
-    //   this.getTabBar()) {
-    //   this.getTabBar().setData({
-    //     selected: 0
-    //   })
-    // }
+    let that = this;
+    if (typeof this.getTabBar === 'function' &&
+      this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 0
+      })
+    }
     wx.getSetting({
       success(res) {
         //没有的话  引导用户开启后台定位权限
@@ -275,11 +247,6 @@ Page({
       });
     }
   },
-  test(e){
-    console.log('麦克风进入')
-    console.log(e)
-
-  },
   /**
    * 按住按钮开始语音识别
    */
@@ -339,7 +306,7 @@ Page({
    */
   streamRecordEnd: function (e) {
 
-    //console.log("streamRecordEnd", e)
+    console.log("streamRecordEnd", e)
     wx.showToast({
       title: '正在转换~',
       icon: 'loading',
@@ -430,7 +397,8 @@ Page({
   /**
    * 获取问题类型数据
    */
-  getProblemType(projectId) {
+  getProblemType() {
+    var projectId = wx.getStorageSync('projectId');
     let that = this;
     var requestUrl = that.data.requestUrl;
     //调用全局 请求方法
@@ -487,270 +455,7 @@ Page({
     //   }
     // })
   },
-        /**
-   * 获取点位类型列表
-   */
-  getPointList() {
-    let that = this;
-    var requestUrl = that.data.requestUrl;
-    //调用全局 请求方法
-    app.wxRequest(
-      'GET',
-      requestUrl + "/home/manage/searchAllPoint", {
-        
-      },
-      app.seesionId,
-      (res) => {
-        if (res.data.httpStatusCode === 200) {
-          //console.log(res.data.retObj)
-          if (res.data.retObj == undefined) {
-            wx.redirectTo({
-              url: '../error_tip/error_tip?msgCode=m_10009'
-            })
-            return
-          }
-          that.setData({
-            point_originalList: res.data.retObj
-          })
-        }
 
-      },
-      (err) => {
-
-      }
-    )
-  },
-    /**
-   * 获取点位名称列表
-   */
-  getLoctionList() {
-    let that = this;
-    var requestUrl = that.data.requestUrl;
-    //调用全局 请求方法
-    app.wxRequest(
-      'GET',
-      requestUrl + "/home/manage/searchAllLocation", {
-        
-      },
-      app.seesionId,
-      (res) => {
-        if (res.data.httpStatusCode === 200) {
-          console.log('打印点位列表')
-          console.log(res.data.retObj)
-          if (res.data.retObj == undefined) {
-            wx.redirectTo({
-              url: '../error_tip/error_tip?msgCode=m_10009'
-            })
-            return
-          }
-          that.setData({
-            originalList: res.data.retObj
-          })
-        }else{
-          console.log('点位列表加载异常')
-          console.log(res)
-        }
-
-      },
-      (err) => {
-        console.log('加载点位列表失败')
-        console.log(err)
-      }
-    )
-  },
-  setAddRemark(e){
-    const inputValue = e.detail.value;
-    this.setData({ addRemark : inputValue }); // 显示下拉列表
-  },
-
-  onSearchInput2(e) {
-    const inputValue = e.detail.value;
-    const originalList = this.data.point_originalList
-    if(originalList.length < 1){
-      this.getPointList();
-    }
-    this.setData({ inputValue2:inputValue, showDropdown2: true }); // 显示下拉列表
-    this.filterList2(inputValue); // 过滤数据列表
-  },
-  filterList2(inputValue) {
-    const that =this;
-    const originalList = that.data.point_originalList
-    const filtered = [];
-    for(let i=0; i<originalList.length;i++){
-      if(originalList[i].name.includes(inputValue)){
-        filtered.push(originalList[i])
-      }
-    }
-    //手动添加其他选项
-   //filtered.push({id:'-1',name:'其他'})
-   that.setData({ point_filteredList: filtered, dropdownHeight2: filtered.length * 44}); // 设置过滤后的数据到页面数据对象中
-  },
-  onItemTap2(e) {
-    const selectedItem = e.currentTarget.dataset.item; // 获取选中的项（如果有需要）
-    this.setData({ selectedPoint: selectedItem,inputValue2:selectedItem.name, showDropdown2: false }); // 隐藏下拉列表，并更新输入框的值
-    //可选：执行其他操作，如跳转页面等
-  },
-
-  onSearchInput(e) {
-    const inputValue = e.detail.value;
-    const originalList = this.data.originalList
-    if(originalList.length < 1){
-      this.getLoctionList();
-    }
-    this.setData({ inputValue, showDropdown: true }); // 显示下拉列表
-    this.filterList(inputValue); // 过滤数据列表
-  },
-  filterList(inputValue) {
-    const that =this;
-    const originalList = that.data.originalList
-    const filtered = [];
-    for(let i=0; i<originalList.length;i++){
-      if(originalList[i].name.includes(inputValue)){
-        filtered.push(originalList[i])
-      }
-    }
-    //手动添加其他选项
-    //filtered.push({name:'其他'})
-   that.setData({ filteredList: filtered, dropdownHeight: filtered.length * 44}); // 设置过滤后的数据到页面数据对象中
-  },
-  onItemTap(e) {
-    console.log(e)
-    const selectedItem = e.currentTarget.dataset.item; // 获取选中的项（如果有需要）
-    this.setData({ selectedLocation: selectedItem,inputValue:selectedItem.name, showDropdown: false }); // 隐藏下拉列表，并更新输入框的值
-    // 可选：执行其他操作，如跳转页面等
-  },
-  onPageScroll(e){
-    //console.log('页面滚动')
-    this.setData({ showDropdown: false ,showDropdown2:false}); // 隐藏下拉列表，并更新输入框的值
-  },
-    /**
-   * 获取责任单位列表
-   */
-  getDeptList(userId) {
-    let that = this;
-    var requestUrl = that.data.requestUrl;
-    //调用全局 请求方法
-    app.wxRequest(
-      'GET',
-      requestUrl + "/home/manage/searchAllDeptByBinHai", {
-        "userId": userId,
-        "type":2
-      },
-      app.seesionId,
-      (res) => {
-        if (res.data.httpStatusCode === 200) {
-          console.log('打印单位列表')
-          console.log(res.data.retObj)
-          var list = res.data.retObj
-          for(let i=0; i<list.length; i++){
-            list[i].show = true
-            deptMap.set(list[i].id,list[i])
-          }
-          that.setData({
-            dept_originalList: list
-          })
-        }else{
-          console.log('单位列表加载')
-          console.log(res)
-        }
-
-      },
-      (err) => {
-        console.log('加载单位列表失败')
-        console.log(err)
-      }
-    )
-  },
-  //打开选择单位弹窗
-  open_select_page(e){
-    console.log('责任单位弹窗')
-    console.log(this.data.dept_originalList)
-    let that = this
-    if(that.data.dept_originalList.length < 1){
-      that.getDeptList(app.terminalUserId);
-    }
-    that.setData({
-      modalName: e.currentTarget.dataset.target
-    })
-  },
-
-
-  dept_onSearchInput(e) {
-    let dept_inputValue = e.detail.value;
-    console.log(dept_inputValue)
-    //this.setData({ dept_inputValue, dept_showDropdown: true }); // 显示下拉列表
-    this.dept_filterList(dept_inputValue); // 过滤数据列表
-  },
-  dept_filterList(inputValue) {
-    const that =this;
-    const originalList = that.data.dept_originalList
-    for(let i=0; i<originalList.length;i++){
-      if(originalList[i].name == '其他') continue
-      if(originalList[i].name.includes(inputValue)){
-        originalList[i].show = true
-      }else{
-        originalList[i].show = false
-      }
-    }
-    that.setData({
-      dept_originalList:originalList
-    })
-  },
-  deptCheckBoxChange(e){
-    var valueArr = e.detail.value
-    const that =this;
-    const originalList = that.data.dept_originalList
-    // if(valueArr.length == 0){//没选项取消所有禁用
-    //   for(let i=0; i<originalList.length;i++){
-    //       originalList[i].isDisabled = false
-    //   }
-    // }
-    // //第一次选择 如果选中了"其他"  其他多选框禁用,如果选中有效id  则禁用"其他"多选框
-    // if(valueArr.length == 1){
-    //   if(valueArr[0] === '-1'){//选中了"其他"
-    //     for(let i=0; i<originalList.length;i++){
-    //       if(originalList[i].name === '其他'){
-    //         originalList[i].isDisabled = false
-    //       }else{
-    //         originalList[i].isDisabled = true
-    //       }
-    //     }
-    //   }else{
-    //     for(let i=0; i<originalList.length;i++){
-    //       if(originalList[i].name === '其他'){
-    //         originalList[i].isDisabled = true
-    //       }else{
-    //         originalList[i].isDisabled = false
-    //       }
-    //     }
-    //   }
-    // }
-    // if(valueArr.length <= 1){//以上两种情况 更新对象
-    //   that.setData({
-    //     dept_originalList:originalList
-    //   })
-    // }
-    var selNames = ''
-    var selectedDeptIsd='';
-    for(let i=0; i<valueArr.length; i++){//更新选中结果
-      let dept = deptMap.get(valueArr[i])
-      selNames += dept.name + '、'
-      selectedDeptIsd += dept.id + ','
-    }
-    if(selNames && selectedDeptIsd){
-      selNames = selNames.substr(0,selNames.length-1)
-      selectedDeptIsd = selectedDeptIsd.substr(0,selectedDeptIsd.length-1)
-    }
-    that.setData({
-      dept_inputValue:selNames,
-      selectedDeptIsd:selectedDeptIsd
-    })
-    // console.log(selNames)
-    // console.log(selectedDeptIsd)
-  },
-  dept_onItemTap(e) {
-
-  },
 
 
 
@@ -798,49 +503,51 @@ Page({
     })
   },
   //验证项目执行城市
-  // checkExeProjectCity: function (UserAddrData) {
-  //   let app = getApp();
-  //   var flag = true;
-  //   if (app.projectExeCity == undefined) {
-  //     return
-  //   }
-  //   if (app.projectExeCity.length > 0 && UserAddrData) {
-  //     flag = false
-  //     var projectExeCityList = app.projectExeCity
-  //     for (let i = 0; i < projectExeCityList.length; i++) {
-  //       var level = 1;
-  //       let ExeCity = projectExeCityList[i];
-  //       if (ExeCity.exeCity) {
-  //         level = 2;
-  //       }
-  //       if (ExeCity.exeCounty) {
-  //         level = 3;
-  //       }
-  //       if (level == 1) {
-  //         if (UserAddrData.province == ExeCity.exeProvice) {
-  //           flag = true;
-  //           return;
-  //         }
-  //       } else if (level == 2) {
-  //         if (UserAddrData.province == ExeCity.exeProvice && UserAddrData.city == ExeCity.exeCity) {
-  //           flag = true;
-  //           return;
-  //         }
-  //       } else if (level == 3) {
-  //         if (UserAddrData.province == ExeCity.exeProvice && UserAddrData.city == ExeCity.exeCity && UserAddrData.district == ExeCity.exeCounty) {
-  //           flag = true;
-  //           return;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   if (!flag) {
-  //     //console.log('d')
-  //     wx.redirectTo({
-  //       url: '../error_tip/error_tip?msgCode=m_10002'
-  //     })
-  //   }
-  // },
+  checkExeProjectCity: function (UserAddrData) {
+    let app = getApp();
+    //console.log(app.projectExeCity)
+    //console.log(UserAddrData)
+    var flag = true;
+    if (app.projectExeCity == undefined) {
+      return
+    }
+    if (app.projectExeCity.length > 0 && UserAddrData) {
+      flag = false
+      var projectExeCityList = app.projectExeCity
+      for (let i = 0; i < projectExeCityList.length; i++) {
+        var level = 1;
+        let ExeCity = projectExeCityList[i];
+        if (ExeCity.exeCity) {
+          level = 2;
+        }
+        if (ExeCity.exeCounty) {
+          level = 3;
+        }
+        if (level == 1) {
+          if (UserAddrData.province == ExeCity.exeProvice) {
+            flag = true;
+            return;
+          }
+        } else if (level == 2) {
+          if (UserAddrData.province == ExeCity.exeProvice && UserAddrData.city == ExeCity.exeCity) {
+            flag = true;
+            return;
+          }
+        } else if (level == 3) {
+          if (UserAddrData.province == ExeCity.exeProvice && UserAddrData.city == ExeCity.exeCity && UserAddrData.district == ExeCity.exeCounty) {
+            flag = true;
+            return;
+          }
+        }
+      }
+    }
+    if (!flag) {
+      //console.log('d')
+      wx.redirectTo({
+        url: '../error_tip/error_tip?msgCode=m_10002'
+      })
+    }
+  },
   getDps: function () {
     wx.getSystemInfo({
       success(res) {
@@ -997,11 +704,6 @@ Page({
   },
   showModal(e) {
     // console.log(e);
-    if(e.currentTarget.dataset.target == 'ChooseModal'){
-      if(this.data.problemType.length < 1){
-        this.getProblemType(this.data.projectId);
-      }
-    }
     this.setData({
       modalName: e.currentTarget.dataset.target
     })
@@ -1068,9 +770,9 @@ Page({
     var type = this.data.type;
     if (type == 'adds') {
       wx.chooseImage({
-        count: 4, //默认9
+        count: 1, //默认9
         //sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
-        sourceType: ['album', 'camera'], //从相册选择
+        //sourceType: ['album', 'camera'], //从相册选择
         sizeType: ['compressed'], //可以指定是原图还是压缩图，默认二者都有
         sourceType: ['camera'],
         success: (res) => {
@@ -1091,28 +793,22 @@ Page({
 
       });
     } else {
-      let imagelength = this.data.imgList.length;
-      //最多4张
-      var imgCount = 4 - imagelength;
-      if(imgCount <= 0){
-        imgCount = 1;
-      }
       wx.chooseImage({
-        count: imgCount, //默认9
+        count: 1, //默认9
         sizeType: ['compressed'], //可以指定是原图还是压缩图，默认二者都有
-        sourceType: ['album', 'camera'], //从相册选择
+        sourceType: ['camera'],
         success: (res) => {
           if (this.data.imgList.length != 0) {
             this.setData({
               imgList: this.data.imgList.concat(res.tempFilePaths),
               modalName: '',
-              reportlength: this.data.reportlength + res.tempFiles.length
+              reportlength: this.data.reportlength + 1
             })
           } else {
             this.setData({
               imgList: res.tempFilePaths,
               modalName: '',
-              reportlength: res.tempFiles.length
+              reportlength: this.data.reportlength + 1
             })
           }
         }
@@ -1130,7 +826,7 @@ Page({
     var type = this.data.type;
     if (type == 'adds') {
       wx.chooseVideo({
-        sourceType: ['album', 'camera'], //从相册选择
+        sourceType: ['camera'],
         compressed: false,
         maxDuration: 30,
         camera: 'back',
@@ -1157,7 +853,7 @@ Page({
       })
     } else {
       wx.chooseVideo({
-        sourceType: ['album', 'camera'], //从相册选择
+        sourceType: ['camera'],
         compressed: false,
         maxDuration: 30,
         camera: 'back',
@@ -1317,51 +1013,11 @@ Page({
     var qustionSort = this.data.showProblemType;
     // 举报描述
     var desc = this.data.desc;
-
-    var location_input = that.data.inputValue
-    var point_input = that.data.inputValue2
-    var selectedLocation = that.data.selectedLocation
-    var selectedPoint = that.data.selectedPoint
-    var dept_input = that.data.dept_inputValue
-    var selectedDept = that.data.selectedDept
-    if(!location_input){
-      wx.showToast({
-        title: '请填写点位名称',
-        icon: 'none',
-        duration: 2000,
-        mask: true
-      })
-      return
-    }else if(location_input == '其他'){
-      wx.showToast({
-        title: '请填写有效点位名称,不可填写"其他"',
-        icon: 'none',
-        duration: 2000,
-        mask: true
-      })
-      return
-    }else if(!point_input){
-      wx.showToast({
-        title: '请填写点位类型',
-        icon: 'none',
-        duration: 2000,
-        mask: true
-      })
-      return
-    }else if(point_input != selectedPoint.name){
-      wx.showToast({
-        title: '请选择预设点位类型,暂不支持自定义',
-        icon: 'none',
-        duration: 2000,
-        mask: true
-      })
-      return
-    }
     if (qustionSort.length < 1) {
       wx.showToast({
         title: '请选择问题类型',
         icon: 'none',
-        duration: 2000,
+        duration: 1000,
         mask: true
       })
       return
@@ -1370,20 +1026,12 @@ Page({
       wx.showToast({
         title: '请拍摄举报图片/视频',
         icon: 'none',
-        duration: 2000,
+        duration: 1000,
         mask: true
       })
       return
     }
-    // if ((addsImg.length + addsVideo.length) < 1) {
-    //   wx.showToast({
-    //     title: '请拍摄地点图片/视频',
-    //     icon: 'none',
-    //     duration: 1000,
-    //     mask: true
-    //   })
-    //   return
-    // }
+    //信息描述非必填
     // if (desc == '') {
     //   wx.showToast({
     //     title: '请填写信息描述',
@@ -1397,7 +1045,6 @@ Page({
       title: '上传中',
       mask: true
     })
-    //console.log('开始上传资源')
     //举报图片
     for (var index = 0; index < reportImg.length; index++) {
       await that.reportImg_syn(reportImg[index], index).then((res) => {
@@ -1431,7 +1078,6 @@ Page({
     // console.log("本地总资源:", length)
     // 资源全部上传成功 上传答案
     if (length == rsLength) {
-      console.log('资源上传完毕')
       // wx.showToast({
       //   title: '资源上传中',
       //   icon: 'none',
@@ -1463,21 +1109,13 @@ Page({
     var qustionSort = that.data.showProblemType;
     //举报描述
     var desc = that.data.desc;
-    //补充标签
-    var addRemark = that.data.addRemark || ''
     //举报经纬度
     var longitude = that.data.longitude;
     var latitude = that.data.latitude;
     //举报地址
     var address = that.data.address;
-    //点位对象 传回name id
-    var selectedLocation = that.data.selectedLocation
-    //点位类型
-    var selectedPoint = that.data.selectedPoint
-    //责任单位对象 传回name id
-    var selectedDeptIds = that.data.selectedDeptIsd
     //自定义点位名称
-    var locationName = that.data.inputValue
+    var locationName = that.data.locationName
     //问题分类
     var qustionSort = that.data.showProblemType;
     var sortIds = '';
@@ -1486,7 +1124,7 @@ Page({
     }
     sortIds = sortIds.substring(0, sortIds.length - 1)
     var resourceList = that.data.resourceList;
-    console.log('开始保存答案')
+
     //发送请求到后台，存储：经纬度、地址、描述、问题ID 
     //调用全局 请求方法
     app.wxRequest(
@@ -1495,26 +1133,33 @@ Page({
         "longitude": longitude,
         "latitude": latitude,
         "address": address,
-        "locationId": '',
         "locationName": locationName,
-        "pointId": selectedPoint.id,
-        "pointName":selectedPoint.name,
-        "deptIds": selectedDeptIds,
-        //"deptName": selectedLocation.name,
         "desc": desc,
-        "addRemark":addRemark,
-        "qustionSortIds": sortIds,
+        "qustionSort": sortIds,
         "openid": openid,
         "projectId": projectId,
         "resourceListStr": JSON.stringify(resourceList)
       },
       app.seesionId,
-      (res) => {   
-        console.log("上传答案结束")
-        console.log(res)
+      (res) => {
+        // console.log("上传答案结束,",res)
         if (res.data.status === 'success') {
+          if(locationName){//将上传的点位名称放到本地缓存中
+            var storageLocationNameList = that.data.storageLocationNameList
+            var index = storageLocationNameList.indexOf(locationName)
+            //如果是新的点位名称,则放到缓存list中
+            if(index == -1){
+              //如果数量大于5,则删除最早的
+              if(storageLocationNameList.length >= 5) {
+                storageLocationNameList.shift()
+              }
+              storageLocationNameList.push(locationName)
+              wx.setStorageSync('storageLocationName',storageLocationNameList)
+            }
+            
+          }
           wx.reLaunch({
-            url: "../success/success?projectId="+that.data.projectId
+            url: "../success/success"
           })
         } else {
           wx.showToast({
@@ -1527,8 +1172,7 @@ Page({
 
       },
       (err) => {
-        console.log("上传答案失败,")
-        console.log(err)
+
       }
     )
     // wx.request({
@@ -1614,10 +1258,7 @@ Page({
 
         },
         //请求失败
-        fail: function (err) {
-          wx.hideLoading()
-          console.log("图片上传失败原因：");
-        console.log(err)},
+        fail: function (err) {},
         complete: () => {
 
         }
@@ -1665,10 +1306,7 @@ Page({
           }
         },
         //请求失败
-        fail: function (err) {
-          wx.hideLoading()
-          console.log("视频上传失败原因："+err)
-        console.log(err)},
+        fail: function (err) {},
         complete: () => {
           // console.log('上传举报视频执行完毕');
         }
@@ -1791,16 +1429,57 @@ Page({
 
   saveLocationName(e) {
     let that = this
-    that.setData({
-      locationName: e.detail.value
+    if(e.detail.value.length > 0){
+      //用户自定义输入,关闭弹窗
+      that.setData({
+        locationName: e.detail.value,
+        showDropdown:false
+      })
+    }else{
+      that.setData({
+        locationName: e.detail.value
+      })
+    }
+    
+  },
+  closePage(){
+    this.setData({
+      showDropdown:false
     })
   },
-  goback(){
-    //console.log('返回')
-    wx.reLaunch({
-      url: "../check_project/check_project",
-      fail: function (err) {console.log(err)},
-    })
-  }
+  onSearchInput(e) {
+    var storageLocationNameList = wx.getStorageSync('storageLocationName');
+    console.log(storageLocationNameList)
+    if(storageLocationNameList){
+      this.setData({
+        storageLocationNameList : storageLocationNameList,
+        dropdownHeight:storageLocationNameList.length*44,
+        showDropdown:true
+      })
+    }
+    // const inputValue = e.detail.value;
+    // this.setData({ inputValue, showDropdown: true }); // 显示下拉列表
+    // this.filterList(inputValue); // 过滤数据列表
+  },
+  filterList(inputValue) {
+    const that =this;
+    const originalList = that.data.originalList
+    const filtered = [];
+    for(let i=0; i<originalList.length;i++){
+      if(originalList[i].name.includes(inputValue)){
+        filtered.push(originalList[i])
+      }
+    }
+    //手动添加其他选项
+    filtered.push({name:'其他'})
+   that.setData({ filteredList: filtered, dropdownHeight: filtered.length * 44}); // 设置过滤后的数据到页面数据对象中
+  },
+  onItemTap(e) {
+    console.log(e)
+    const selectedItem = e.currentTarget.dataset.item; // 获取选中的项（如果有需要）
+    this.setData({ locationName: selectedItem,inputValue:selectedItem, showDropdown: false }); // 隐藏下拉列表，并更新输入框的值
+    // 可选：执行其他操作，如跳转页面等
+  },
+
 
 })

@@ -1,7 +1,12 @@
-<view class='{{loadShow=="true"?"show":"hide"}}'>
+<view class='{{loadShow=="true"?"show":"hide"}}' style="height: 100%;">
   <view class='cu-load load-modal' wx:if="{{loadModal}}">
-    <image src='/images/logo_user.jpg' class='png' mode='aspectFit'></image>
+    <!-- <image src='/images/logo_user.jpg' class='png' mode='aspectFit'></image> -->
     <view class='blue-text'>加载中...</view>
   </view>
-  <image class="headimg" src="/images/hello1.jpg"> </image>
+  <view wx:else="">
+    <view class="margin-tb-sm text-center " style="width: 100%;text-align: center; position: absolute; top: 81%; z-index: 1;">
+      <button class="cu-btn round bg-blue shadow lg insideBt" style="font-size: x-large;" role="button" bind:tap="jump">开始上报</button>
+    </view>
+  </view>
+  <image class="headimg" src="/images/hello1.jpg" mode="scaleToFill"> </image>
 </view>

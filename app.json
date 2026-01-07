@@ -2,7 +2,10 @@
   "pages": [
     "pages/menuBack/menuBack",
     "pages/jubao/jubao",
+    "pages/public_jubao/public_jubao",
     "pages/user/user",
+    "pages/user_record_project/user_record_project",
+    "pages/user_record_detail/user_record_detail",
     "pages/swiper/swiper",
     "pages/detailPage/detailPage",
     "pages/success/success",
@@ -76,7 +79,7 @@
   },
   "plugins": {
     "WechatSI": {
-      "version": "0.3.4",
+      "version": "0.3.6",
       "provider": "wx069ba97219f66d99"
     }
   },

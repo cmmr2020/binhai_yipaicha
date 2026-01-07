@@ -31,6 +31,7 @@ App({
    url: url,
    method: method,
    data: data,
+   //enableQuic:true,
    header: {
     'content-type': method == 'GET'?'application/json':'application/x-www-form-urlencoded',
     'Accept': 'application/json',
@@ -59,7 +60,7 @@ App({
           if (res.data.status == 'success'){
             var seesionId =res.header["Set-Cookie"]; 
             app.seesionId = seesionId
-            console.log(app.seesionId)
+            //console.log(app.seesionId)
             app.wxRequest(method, url, data,seesionId, callback, errFun)
           }else{
             if(res.data.path == "isInBlackList"){
@@ -156,9 +157,9 @@ App({
   },
     globalData: {
     userInfo: null,
-      //requestUrl: 'http://192.168.20.74:8082'//本地
-      requestUrl:' https://testbhwxpu.diaochaonline.com'//35域名
-     //requestUrl: 'https://bhwxpu.diaochaonline.com'//线上
+    //requestUrl: 'http://192.168.10.83:8082'//媒体本地
+    //requestUrl: 'http://192.168.20.50:8082'//本地
+    requestUrl:'https://wxbh.diaochaonline.com'//线上
   },
   msgData:{
     m_10001:'抱歉，因为您之前的不规范操作，现已将您拉入黑名单，因此无法继续使用 “易拍查”小程序，进行不文明现象上报！',
@@ -170,7 +171,6 @@ App({
     m_10007:'抱歉，您的账号已失效,已无法使用。',
     m_10008:'抱歉，您的账号已失效,未绑定有效角色，请联系管理员。',
     m_10009:'抱歉，未检测到预设的点位信息,请联系管理员！',
-
   }
    
 })

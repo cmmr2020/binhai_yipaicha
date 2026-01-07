@@ -36,14 +36,14 @@
     </view>
   </view>
 </view>
-<!-- <view class="cu-list menu sm-border card-menu margin-top">
+<view wx:if="{{isDcy}}" class="cu-list menu sm-border card-menu margin-top">
   <view class="cu-item arrow" bindtap="goTojubaodetail">
     <view class="content">
       <text class=" cuIcon-warn text-blue"></text>
-      <text class="text-grey">我的举报</text>
+      <text class="text-grey">我的上报（问题）</text>
     </view>
   </view>
-</view> -->
+</view>
 
 <!--创城部需求  暂时隐藏功能-->
 <!-- <view class="cu-list menu sm-border card-menu margin-top">
@@ -54,7 +54,7 @@
       </view>
     </view>
 </view> -->
-<view class="cu-list menu sm-border card-menu margin-top">
+<!-- <view class="cu-list menu sm-border card-menu margin-top">
   <view class="cu-item arrow" bindtap="goToabout">
     <view class="content">
       <text class="cuIcon-group lg text-blue"></text>
@@ -64,7 +64,7 @@
 </view>
 <view class="copyright">
   <text class="text-grey text-xs">© 北京美兰德信息咨询有限公司 技术支持</text>
-</view>
+</view> -->
 
 <view class="cu-modal bottom-modal {{modalName=='bottomModal'?'show':''}}" style="padding-bottom: 15%;">
   <view class="cu-dialog">

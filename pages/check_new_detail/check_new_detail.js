@@ -171,7 +171,7 @@ Page({
     que_res_video: [],
     //整改资源map key 问题id
     zgResMap: {},
-    //整改说明
+    //整改描述
     commitContent:'',
     //是否可以提交
     isTijiao:false,
@@ -1221,7 +1221,7 @@ Page({
     var reportVideo = that.data.videoList;
     //录音
     var audioSrc = that.data.audioSrc;
-    //整改说明
+    //整改描述
     var textDesc = that.data.textDesc;
     if ((reportImg.length + reportVideo.length) < 1) {
       wx.showToast({
@@ -1234,7 +1234,7 @@ Page({
     }
     if (textDesc == null || textDesc == '') {
       wx.showToast({
-        title: '整改说明不能为空',
+        title: '整改描述不能为空',
         icon: 'none',
         duration: 1000,
         mask: true
@@ -1543,7 +1543,7 @@ Page({
     var terminalUserId = app.terminalUserId;
     // 任务id
     var taskId = that.data.taskId;
-    //整改说明
+    //整改描述
     var remarks = that.data.textDesc;
     //项目id
     var projectId = that.data.projectId;

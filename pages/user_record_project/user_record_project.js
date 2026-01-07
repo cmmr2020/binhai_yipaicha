@@ -9,6 +9,7 @@ Page({
     fontSize:'',
     bgColorUi:'',
     rightId: wx.getStorageSync('rightId') || 0,
+    openId:'',
   },
 
 
@@ -26,39 +27,36 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function(option) {
-    console.log('项目列表')
     var that = this;
     requestUrl = app.globalData.requestUrl; //服务器路径
+    var openId = option.openid;
     var fontSize = wx.getStorageSync('fontSize');
     var bgColorUi = wx.getStorageSync('bgColorUi');
     that.setData({
       requestUrl: requestUrl,
       fontSize:fontSize,
-      bgColorUi:bgColorUi
+      bgColorUi:bgColorUi,
+      openId:openId
     })
-    
-    var terminalUserId = app.terminalUserId;
-    // console.log(terminalUserId)
-    that.getProjectList(terminalUserId);
+    that.getProjectList(openId);
   },
 
 
-  getProjectList: function(terminalUserId) {
+  getProjectList: function(openId) {
     var that = this;
     var requestUrl = that.data.requestUrl; //服务器路径
     var colorList = that.data.colorList;
-    
     //调用全局 请求方法
     app.wxRequest(
       'GET',
-      requestUrl + '/public/fieldTask/getPublicProjectList',
+      requestUrl + '/public/fieldTask/getPublicProjectListByOpenId',
       {
-        userId: terminalUserId
+        userOpenId: openId
       },
       app.seesionId,
       (res) =>{
         var arr = [];
-        if (res.data.status == 'success') {
+        if (res.data.status == 'success' && res.data.retObj) {
           var projectList = res.data.retObj;
           for (var i = 0; i < projectList.length; i++) {
             var color = colorList[i];
@@ -66,30 +64,22 @@ Page({
               color: color,
               id: projectList[i].id,
               code: projectList[i].code,
-              // createBy: projectList[i].createBy,
-              // createTime: projectList[i].createTime,
-              // isCheck: projectList[i].isCheck,
-              // isConsistent: projectList[i].isConsistent,
-              // isGrade: projectList[i].isGrade,
-              // latitude: projectList[i].latitude,
-              // longitude: projectList[i].longitude,
               name: projectList[i].name,
-              // status: projectList[i].status,
-              // updateBy: projectList[i].updateBy,
-              // updateTime: projectList[i].updateTime,
-              // version: projectList[i].version
             })
           }
-
           that.setData({
-            elements: arr
+            elements: arr,
+            tableTitle:'项目列表'
           })
         } else {
           wx.showToast({
-            title: res.data.message,
+            title: '暂无符合条件的结果',
             icon: 'none',
             duration: 1000,
             mask: true
+          })
+          that.setData({
+            tableTitle:'暂无符合条件的结果'
           })
         }
 

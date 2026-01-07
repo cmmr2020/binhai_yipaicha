@@ -22,6 +22,7 @@ Page({
    */
   data: {
     loadShow: 'true',
+    menuType:0
   },
 
   /**
@@ -75,7 +76,6 @@ Page({
               appId: appId
             },
             success(res) {
-              that.closeModal(); //关闭加载动画
               console.log("请求用户：", res)
               if (res.data.status == 'success') {
                 // if(res.data.retObj.govDelFlag=='0'){
@@ -107,6 +107,7 @@ Page({
                 let menuType = 3;
                 if (res.data.retObj2) {
                   var list = res.data.retObj2.qxRole;
+                  console.log(list)
                   //var terminalUserName = res.data.retObj2.sysUserName;
                   var departmentName = res.data.retObj2.departmentName
                   app.terminalUserId = res.data.retObj2.sysUserId;
@@ -118,10 +119,15 @@ Page({
                     if (menu.name == '责任单位-P' || menu.name == '责任单位-T') { //整改上报
                       app.deptRoleName = menu.name
                       menuType = 1
-                    } else if (menu.name == '创文办-P') { //整改审核
+                      break;
+                    } else if (menu.name == '创文办-T') { //整改审核
+                      app.deptRoleName = menu.name
                       menuType = 2
+                      break;
                     } else if (menu.name == '调查员-P') { //实地调查
+                      app.deptRoleName = menu.name
                       menuType = 0
+                      break;
                     } else { //无效有角色
                       menuType = -1
                     }
@@ -132,46 +138,11 @@ Page({
                     url: '../error_tip/error_tip?msgCode=m_10008'
                   })
                 }
-                wx.setStorageSync('rightId',menuType)
-                that.changeRole(menuType)
-                if (menuType == 3) { //个人中心
-                  wx.switchTab({
-                    url: '../user/user'
-                  })
-                } else if (menuType == 2) { //创文办
-                  wx.switchTab({
-                    url: '../examine_project/examine_project'
-                  })
-                } else if (menuType == 1) { //责任单位
-                  wx.switchTab({
-                    url: '../dept_type_task_index/dept_type_task_index'
-                  })
-                } else { //调查员
-                  wx.switchTab({
-                    url: '../check_project/check_project'
-                  })
-                }
-                //用户没有绑定政府
-                // if (res.data.retObj.isGodCode === "false") {
-                //   wx.showToast({
-                //     title: '跳转中',
-                //     icon: 'loading',
-                //     duration: 6000
-                //   })
-                //   wx.reLaunch({
-                //     url: '../tip/tip'
-                //   })
-
-                // } else {
-                //   wx.switchTab({
-                //     url: '../jubao/jubao'
-                //   })
-                // }
+                that.data.menuType = menuType
+                that.closeModal(); //关闭加载动画
               } else {
                 that.closeModal();
-                // console.log('error')
               }
-
             }
           })
         }
@@ -181,6 +152,35 @@ Page({
         console.log(res)
       }
     })
+  },
+  jump(){
+    let that = this;
+    if(that.data.loadModal){//未加载完成 不允许触发
+      return
+    }
+    let menuType = that.data.menuType
+    wx.setStorageSync('rightId',menuType)
+    that.changeRole(menuType)
+    if (menuType == 3) { //公众
+      // wx.switchTab({
+      //   url: '../public_jubao/public_jubao'
+      // })
+      wx.switchTab({
+        url: '../user/user'
+      })
+    } else if (menuType == 2) { //创文办
+      wx.switchTab({
+        url: '../examine_project/examine_project'
+      })
+    } else if (menuType == 1) { //责任单位
+      wx.switchTab({
+        url: '../dept_type_task_index/dept_type_task_index'
+      })
+    } else { //调查员
+      wx.switchTab({
+        url: '../check_project/check_project'
+      })
+    }
   },
   //改变tabbar
   changeRole(roleType) {

@@ -6,7 +6,7 @@
 
 </view>
 <view class="cu-form-group ">
-  <view class="title text-bold" style="font-size:{{fontSize}}rpx">信息描述:</view>
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">问题信息描述:</view>
   <text class="item-left" style="font-size:{{fontSize28}}rpx">{{remarks}}</text>
 </view>
 <view class="cu-form-group ">
@@ -22,11 +22,15 @@
   <text class="item-left" style="font-size:{{fontSize28}}rpx">{{locationName}}</text>
 </view>
 <view class="cu-form-group ">
-  <view class="title text-bold" style="font-size:{{fontSize}}rpx">位置描述:</view>
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">上报地点:</view>
   <text class="item-left" style="font-size:{{fontSize28}}rpx">{{address}}</text>
 </view>
 <view class="cu-form-group ">
-  <view class="title text-bold" style="font-size:{{fontSize}}rpx">信息类型:</view>
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">地理位置:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{(addRemark == 'undefined' || addRemark == null)?'无':addRemark}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">问题类型:</view>
   <text class="item-left" style="font-size:{{fontSize28}}rpx">{{sortListStr}}</text>
 </view>
 <view class="cu-form-group ">
@@ -55,7 +59,7 @@
         <view class="solids bg-img">
           <view wx:if="{{zgResMap[que_res_img[index].id]}}">
             <image src="{{zgResMap[que_res_img[index].id].url}}" mode='aspectFill' style="max-width: 100%;" bindtap="ViewMedia" data-url="{{zgResMap[que_res_img[index].id].url}}" data-type="0">
-              <view hidden="{{isTijiao || tabCur!=0}}" style="left: 0px;" class="cu-tag2 bg-red" catchtap="DelImg" data-quesResId="{{que_res_img[index].id}}" data-type="0">
+              <view hidden="{{isTijiao || (tabCur!=0 && tabCur!=1) || deptResult == 1}}" style="left: 0px;" class="cu-tag2 bg-red" catchtap="DelImg" data-quesResId="{{que_res_img[index].id}}" data-type="0">
                 <text class="cuIcon-close"></text>
               </view>
               <view class="cu-tag badge">整改</view>
@@ -63,7 +67,7 @@
           </view>
           <!--bindtap="showModal2"-->
           <view wx:else>
-            <view wx:if="{{isTijiao}}" style="text-align: center;">
+            <view wx:if="{{(isTijiao && !hanldFlag) || ((tabCur!=0 && tabCur!=1)&&!zgResMap[que_res_img[index].id])}}" style="text-align: center;">
               <text class="cuIcon-time" style="font-size: 200rpx;"></text>
               <view class="cu-tag badge">未上传整改</view>
             </view>
@@ -88,14 +92,14 @@
         <view class="solids bg-img">
           <view wx:if="{{zgResMap[que_res_video[index].id]}}" bindtap="ViewVideoForreport" data-url="{{zgResMap[que_res_video[index].id].url}}" data-type="2" data-index="{{index}}">
             <video style="max-width: 100%;height: 160px;" src="{{zgResMap[que_res_video[index].id].url}}" poster="{{zgResMap[que_res_video[index].id].poster}}" data-type="0">
-              <view hidden="{{isTijiao || tabCur!=0}}" style="left: 0px;" class="cu-tag2 bg-red" catchtap="DelImg" data-quesResId="{{que_res_video[index].id}}" data-type="2">
-                <text class="cuIcon-close"></text>
+              <view hidden="{{isTijiao || (tabCur!=0 && tabCur!=1)|| deptResult == 1}}" style="left: 0px;" class="cu-tag2 bg-red" catchtap="DelImg" data-quesResId="{{que_res_video[index].id}}" data-type="2">
+                <text  class="cuIcon-close"></text>
               </view>
               <view class="cu-tag badge" style=" margin-top: 4%;">整改</view>
             </video>
           </view>
           <view wx:else>
-            <view wx:if="{{isTijiao}}" style="text-align: center;">
+            <view wx:if="{{isTijiao && !hanldFlag}}" style="text-align: center;">
               <text class="cuIcon-time" style="font-size: 200rpx;"></text>
               <view class="cu-tag badge">未上传整改</view>
             </view>
@@ -126,11 +130,11 @@
   </view>
 </view> -->
 
-<!-- 整改说明 -->
-<view wx:if="{{tabCur!=0}}">
+<!-- 整改描述 -->
+<view wx:if="{{tabCur!=0 && tabCur!=1}}">
 <view class="cu-bar  solid-bottom bg-white-user" >
   <view class="action">
-    <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改说明</text>
+    <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改描述</text>
   </view>
 </view>
 <!-- !!!!! placeholder 在ios表现有偏移 建议使用 第一种样式 -->
@@ -138,7 +142,7 @@
   <textarea style="font-size:{{fontSize28}}rpx">　无</textarea>
 </view>
 <view  wx:else class="cu-form-group " style="pointer-events: none;">
-  <textarea wx:if="{{commitContent}}" style="font-size:{{fontSize28}}rpx">{{commitContent}}</textarea>
+  <textarea wx:if="{{commitContent}}" value="{{commitContent}}" style="font-size:{{fontSize28}}rpx"></textarea>
   <textarea wx:else="" style="font-size:{{fontSize28}}rpx">无</textarea>
 </view>
 <view  class="cu-bar-user">
@@ -160,20 +164,28 @@
   </view>
 </view> -->
 <!--上传部分  待整改和长期整改状态显示-->
-<view wx:if="{{tabCur == 0 || tabCur ==2}}">
-  <!-- 整改说明 -->
+<view wx:if="{{tabCur == 0 || tabCur == 1 }}">
+  <!-- 整改描述 -->
   <view class="cu-bar  solid-bottom">
     <view class="action">
-      <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改说明</text>
+      <text class="cuIcon-title text-{{bgColor}}"></text><text style="font-size:{{fontSize}}rpx">整改描述</text>
     </view>
   </view>
   <!-- !!!!! placeholder 在ios表现有偏移 建议使用 第一种样式 -->
-  <view class="cu-form-group {{isTijiao ==true?'untijiao':''}}">
+  <view class="cu-form-group {{isTijiao==true?'untijiao':''}} {{deptResult==1?'untijiao':''}}">
     <!--   <textarea maxlength="-1"  bindinput="textareaAInput" placeholder="提供针对此类问题长效管理措施说明" ></textarea> -->
-    <textarea maxlength="-1" bindinput="textareaAInput" data-actionType="0" bindblur="changeTask" value="{{commitContent}}" placeholder="{{modalName=='Modal1' ?' ' : '提供针对此类问题长效管理措施说明'}}" style="font-size:{{fontSize28}}rpx" confirm-type='done'></textarea>
+    <textarea maxlength="-1" bindinput="textareaAInput"  value="{{commitContent}}" placeholder="{{modalName=='Modal1' ?' ' : '提供针对此类问题长效管理措施说明'}}" style="font-size:{{fontSize28}}rpx" confirm-type='done'></textarea>
   </view>
-  <view class="padding-xl_user" hidden="{{!isTijiao}}">
-    <button data-actionType="1" bindtap="changeTask" class="cu-btn  block bg-{{bgColor}} margin-tb-sm lg" style="font-size:{{fontSize}}rpx">提交</button>
+  <view class="padding-xl_user" hidden="{{isTijiao}}">
+    <button hidden="{{hanldFlag}}" data-actionType="0" bindtap="changeTask" class="cu-btn  block bg-{{bgColor}} margin-tb-sm lg" style="font-size:{{fontSize}}rpx">完成上报</button>
+  </view>
+  <view class="flex solid-bottom padding justify-center" style="width: 100%;" hidden="{{isBtHide || (tabCur!=0 && tabCur!=1)}}">
+    <view class=" margin-xs radius">
+      <button role="button" class="cu-btn bg-{{bgColor}} "  data-actionType="1" bindtap="changeTask">提交</button>
+    </view>
+    <view class=" margin-xs radius">
+      <button role="button" class="cu-btn bg-{{bgColor}} " data-actionType="2" bindtap="changeTask">不合格</button>
+    </view>
   </view>
 </view>
 

@@ -1,11 +1,10 @@
 const util = require('../../utils/util_time.js')
-// import regeneratorRuntime from '../../utils/runtime.js'
+//import regeneratorRuntime from '../../libs/regenerator-runtime/runtime.js'
 // 引入跳转js
 import router from '../../utils/router.js';
 var app = getApp();
 const recorderManager = wx.getRecorderManager()
 const innerAudioContext = wx.createInnerAudioContext()
-var requestUrl
 Page({
   data: {
     requestUrl: '', //请求路径
@@ -14,17 +13,118 @@ Page({
     taskId: '',
     projectId: '', //项目id
     terminalUserId: '', //用户id
-    task_log_list: [], //任务日志集合
-    can_qs: true, //权属异议选择框 与长期整改互斥  默认显示 未选中
-    can_long: true, //长期整改选择框 与权属异议互斥  默认显示 未选中
-    dissent_show: true,
-    long_setTime: false, //长期整改结束日期选择框
-    long_task_finish_Time: '', //长期整改结束时间
-    process_auditContent: '', //整改审核审批意见
+    dissent:0,//是否首页展示
+    task_log_list: [],//任务日志集合
+    can_qs: true,//权属异议选择框 与长期整改互斥  默认显示 未选中
+    can_long: true,//长期整改选择框 与权属异议互斥  默认显示 未选中
+    long_setTime: false,//长期整改结束日期选择框
+    long_task_finish_Time: '',//长期整改结束时间
+    process_auditContent: '',//整改审核审批意见
+    pubRemark:'',//公示信息
+    //资源
+    retObj: [],
+    imgDescList: [{
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }], //图片对应描述
+    voidDescList: [{
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }, {
+      description: " "
+    }], //视频对应描述 
+    //举报图片
+    reportImgSrc: [],
+    //举报视频
+    reportVideoSrc: [],
+    //图片上传数据
+    imgList_No: [],
+    imgList_Dep: [],
+    imgList: [],
+    //视频上传数据
+    videoList_No: [],
+    videoList_Dep: [],
+    videoList: [],
+    //门头照资源
+    imgList_door: [],
     //举报资源总长度  限制上传数量
     reportlength: 0,
+
     //上传资源绑定的问题ID
     answerId: '',
+
     //倒计时变量
     remainTimeText: '00:00',
     log: {},
@@ -38,14 +138,16 @@ Page({
     isShow_Dep: 1,
     modalHidden: true,
     fuzhi: 0, //定义一个变量来控制取消的时候不给已有的录音赋值  0-赋值，
+
     resourceList: [], //资源集合
+
     address: '', //地址
     latitude: '', //地址经纬度
     longitude: '',
     code: '', //任务编码
     isSwitch: false, //复选框是否权属异议，默认false
     dissent: 0, //是否权属异议,o否，1是
-    longtask: 0, //是否权属异议,o否，1是
+    longtask: 0,//是否权属异议,o否，1是
     textDesc: '', //文本描述
     i: 0,
     success: 0, //成功个数
@@ -61,6 +163,8 @@ Page({
     bgColor: '',
     // 0待整改（未整改/整改不达标继续整改）  1 已整改 2 长期整改 3 整改合格 4 待审核
     tabCur: '',
+    update_select_dept: '',//选中的部门
+    sortListStr:'',//检查标准
     //问题图片
     que_res_img: [],
     //问题视频
@@ -84,7 +188,7 @@ Page({
   onLoad: function (e) {
     var that = this;
     var terminalUserId = app.terminalUserId;
-    var taskId = e.id;
+    var quesId = e.id;
     var projectId = e.projectId;
     var tabCur = e.tabCur
     var pageScrollto_id = e.pageScrollto_id
@@ -92,50 +196,37 @@ Page({
     var maxPageNum = e.maxPageNum
     var pagenum = e.pagenum
     var title = '';
-    if (tabCur == 0) {
-      title = '常规未整改'
-    } else if (tabCur == 1) {
-      title = '整改单未整改'
-    } else if (tabCur == 2) {
+    //console.log(tabCur)
+    if (tabCur == 4) {
       title = '待审核'
-    } else if (tabCur == 3) {
-      title = '整改通过'
+    } else if (tabCur == 0) {
+      title = '审核有效'
+    } else if (tabCur == 1) {
+      title = '审核无效'
     }
     wx.setNavigationBarTitle({
       title: title
     })
     var requestUrl = app.globalData.requestUrl; //请求路径
-    requestUrl = requestUrl;
     var fontSize = wx.getStorageSync('fontSize');
-    var bgColor = wx.getStorageSync('bgColor');    
-    console.log(app.deptRoleName)
+    var bgColor = wx.getStorageSync('bgColor');
     that.setData({
       requestUrl: requestUrl,
-      taskId: taskId,
+      quesId: quesId,
       tabCur: tabCur,
       projectId: projectId,
       terminalUserId: terminalUserId,
-      isTijiao:(app.deptRoleName=='责任单位-T'?true:false),
       fontSize: fontSize,
       bgColor: bgColor,
       fontSize35: parseInt(fontSize) + 4,
-      fontSize28: parseInt(fontSize) - 2
+      fontSize28: parseInt(fontSize) - 2,
     })
     //console.log("任务id：", this.data.taskId, ", 项目id：", this.data.projectId)
     //获取数据
-    that.detail();
-    //that.getGovPro();
+    that.getAnswerDetail();
     //将当前列表状态和任务id传回父页面, 当前页面返回事加载数据用
     const eventChannel = that.getOpenerEventChannel()
-    if (eventChannel) {
-      eventChannel.emit('acceptDataFromOpenedPage', {
-        pageScrollto_id: pageScrollto_id,
-        tabCur: tabCur,
-        search_param_str: search_param_str,
-        pagenum: pagenum,
-        maxPageNum: maxPageNum
-      });
-    }
+    eventChannel.emit('acceptDataFromOpenedPage', { pageScrollto_id: pageScrollto_id, tabCur: tabCur, search_param_str: search_param_str, pagenum: pagenum, maxPageNum: maxPageNum });
   },
 
   //提示
@@ -145,14 +236,6 @@ Page({
       content: msg,
       showCancel: false
     })
-  },
-  start(e) {
-    let fullScreen = e.detail.fullScreen;
-    if (!fullScreen) {
-      this.VideoContext.pause();
-    } else {
-      this.VideoContext.play();
-    }
   },
   // 开始录音
   startRecord: function (e) {
@@ -180,7 +263,14 @@ Page({
 
     that.startTimer();
   },
-
+  ViewMedia(e) {
+    wx.previewMedia({
+      sources: [{
+        url: e.currentTarget.dataset.url,
+        type: e.currentTarget.dataset.type == 0 ? 'image' : 'video'
+      }],
+    });
+  },
   // 停止录音
 
   stopRecord: function () {
@@ -257,11 +347,12 @@ Page({
     that.setData({
       audioSrc: audioSrc
     })
-    innerAudioContext.autoplay = true
+    //innerAudioContext.autoplay = true
     innerAudioContext.src = this.data.audioSrc[index].src,
-      innerAudioContext.onPlay(() => {
-        console.log('开始播放')
-      })
+    innerAudioContext.play();
+      // innerAudioContext.onPlay(() => {
+      //   console.log('开始播放')
+      // })
 
     // 监听音频自然播放至结束的事件
     innerAudioContext.onEnded(() => {
@@ -270,9 +361,9 @@ Page({
       that.setData({
         audioSrc: audioSrc,
       })
+      innerAudioContext.stop();
       // 取消自然播放至结束的事件
       innerAudioContext.offEnded();
-
     })
 
     // console.log("播放录音", that.data.audioSrc[index])
@@ -294,11 +385,12 @@ Page({
     that.setData({
       audioSrc: audioSrc_No
     })
-    innerAudioContext.autoplay = true
-    innerAudioContext.src = this.data.audioSrc_No[index].src,
-      innerAudioContext.onPlay(() => {
-        console.log('开始播放')
-      })
+    //innerAudioContext.autoplay = true
+    innerAudioContext.src = this.data.audioSrc_No[index].src;
+    innerAudioContext.play()
+      // innerAudioContext.onPlay(() => {
+      //   console.log('开始播放')
+      // })
     // 监听音频自然播放至结束的事件
     innerAudioContext.onEnded(() => {
       console.log("播放结束")
@@ -306,6 +398,7 @@ Page({
       that.setData({
         audioSrc_No: audioSrc_No,
       })
+      innerAudioContext.stop()
       // 取消自然播放至结束的事件
       innerAudioContext.offEnded();
 
@@ -329,11 +422,14 @@ Page({
     that.setData({
       audioSrc_Dep: audioSrc_Dep
     })
-    innerAudioContext.autoplay = true
+    //innerAudioContext.autoplay = true
     innerAudioContext.src = this.data.audioSrc_Dep[index].src,
-      innerAudioContext.onPlay(() => {
-        console.log('开始播放')
-      })
+      console.log(innerAudioContext.src)
+      innerAudioContext.play()
+      console.log('开始播放aaa')
+    // innerAudioContext.onPlay(() => {
+    //   console.log('开始播放')
+    // })
     // 监听音频自然播放至结束的事件
     innerAudioContext.onEnded(() => {
       console.log("播放结束")
@@ -341,6 +437,7 @@ Page({
       that.setData({
         audioSrc_Dep: audioSrc_Dep,
       })
+      innerAudioContext.stop()
       // 取消自然播放至结束的事件
       innerAudioContext.offEnded();
 
@@ -454,34 +551,17 @@ Page({
     logs.unshift(log)
     wx.setStorageSync('logs', logs)
   },
-
-
-
-  // ViewImageForreport(e) {
-  //   // console.log("图片数据：", e);
-  //   wx.previewImage({
-  //     urls: this.data.reportImgSrc,
-  //     current: e.currentTarget.dataset.url
-  //   });
-  // },
-  // ViewVideoForreport(e) {
-  //   //console.log("视频数据：",e);
-  //   this.VideoContext = wx.createVideoContext('reportVideo' + e.currentTarget.dataset.index);
-  //   this.VideoContext.requestFullScreen(0);
-  // },
-
-
   //发送请求获取数据
-  detail: function () {
+  getAnswerDetail: function () {
     var that = this;
-    var projectId = that.data.projectId; //项目id
-    var taskId = that.data.taskId; //任务id
+    var quesId = that.data.quesId; //任务id
     var requestUrl = that.data.requestUrl; //请求路径
     //调用全局 请求方法
     app.wxRequest(
       'GET',
-      requestUrl + "/public/fieldTask/getPublicTaskResource", {
-        'id': taskId
+      requestUrl + "/home/manage/getAnswrerAndresourceAndDepListByWX",
+      {
+        'answerId': quesId
       },
       app.seesionId,
       (res) => {
@@ -489,116 +569,56 @@ Page({
         if (res.data.status === "success") {
           var data = res.data.retObj
           //实地资源
-          // var images = res.data.retObj.answerResourceMap[0];
-          // var videos = res.data.retObj.answerResourceMap[2];
-          // var audios = res.data.retObj.answerResourceMap[1];
           var images = [];
           var videos = [];
           var audios = [];
-          var answerResourceList = data.publicResourceList
-          if (answerResourceList && answerResourceList.length > 0) {
-            that.data.quesResNum = answerResourceList.length
-            for (let i = 0; i < answerResourceList.length; i++) {
-              var answerResource = answerResourceList[i]
-              if (answerResource.type == 0) { //类型，0图片，1音频，2视频
-                images.push(answerResource)
-              } else if (answerResource.type == 2) {
-                videos.push(answerResource)
-              }
+          var answerImgResourceList = data.reportImgSrc
+          if (answerImgResourceList && answerImgResourceList.length > 0) {
+            for (let i = 0; i < answerImgResourceList.length; i++) {
+              var ImgResource = answerImgResourceList[i]
+              images.push(ImgResource)
             }
           }
-          console.log("图片列表：", images, "---------视频列表：", videos)
-          //整改资源
-          var images_dep = [];
-          var videos_dep = [];
-          var taskResourceList = data.taskResourceList
-          if (taskResourceList && taskResourceList.length > 0) {
-            that.data.zgResNum = taskResourceList.length
-            for (let i = 0; i < taskResourceList.length; i++) {
-              var taskResource = taskResourceList[i]
-              let dataMap = that.data.zgResMap
-              dataMap[taskResource.quesResId] = {
-                'url': taskResource.url,
-                'type': taskResource.type
-              }
-              that.setData({
-                zgResMap: dataMap
-              })
-              // if(taskResource.type == 0){//类型，0图片，1音频，2视频
-              //   images_dep.push(taskResource)
-              // }else if(taskResource.type == 2){
-              //   videos_dep.push(taskResource)
-              // }
+          var answerVideoResourceList = data.reportVideoSrc
+          if (answerVideoResourceList && answerVideoResourceList.length > 0) {
+            for (let i = 0; i < answerVideoResourceList.length; i++) {
+              var videoResource = answerVideoResourceList[i]
+              videos.push(videoResource)
             }
           }
-          //如果问题资源和整改资源一致 则显示    
-          if (that.data.quesResNum == that.data.zgResNum) {
-            that.setData({
-              checkShow: false
-            })
-          }
-          //that.downlodaResource(images, videos, audios);
-          //that.downlodaResource_dep(images_dep, videos_dep, audios_dep);
           var departmentName = '';
-          if (res.data.retObj.departmentName) {
-            departmentName = res.data.retObj.departmentName
-          } else {
-            var departmentTaskVoList = res.data.retObj.departmentTaskVoList
-            if (departmentTaskVoList && departmentTaskVoList.length > 0) {
-              for (let i = 0; i < departmentTaskVoList.length; i++) {
-                departmentName += departmentTaskVoList[i].name + "、"
-              }
+          if (res.data.retObj.departments && res.data.retObj.departments.length > 0) {
+            var departmentList = res.data.retObj.departments
+            for (let i = 0; i < departmentList.length; i++) {
+              departmentName += departmentList[i].name + "、"
             }
             departmentName = departmentName.substring(0, departmentName.length - 1)
-          }
-          //验证任务状态
-          let hanldFlag = false;//是否隐藏
-          let isBtHide = false;
-          if(app.deptRoleName=='责任单位-T'){
-             //提交单位  若任务为 未提交则不可以操作任务
-             if(res.data.retObj.deptResult){
-              hanldFlag = true
-             }else{
-              isBtHide = true
-             }
           }else{
-            isBtHide = true
-           //上报单位  若任务为 已提交则不可以操作任务
-           if(res.data.retObj.deptResult && res.data.retObj.deptResult == 1){
-            hanldFlag = true
-           }
+             departmentName = '待分配';
           }
-          console.log(app.deptRoleName)
-          console.log('isTijiao:'+that.data.isTijiao)
-          console.log('hanldFlag:'+hanldFlag)
-          console.log('isBtHide:'+isBtHide)
+          var sorts = ''
+          if (res.data.retObj.publicSorts) {
+            var sortList = res.data.retObj.publicSorts
+            for (let i = 0; i < sortList.length; i++) {
+              sorts += sortList[i].name + "、"
+            }
+            sorts = sorts.substring(0, sorts.length - 1)
+          }
           that.setData({
-            hanldFlag:hanldFlag,
-            isBtHide:isBtHide,
-            address: res.data.retObj.address,
-            addRemark:res.data.retObj.addRemark,
-            //经纬度
-            latitude: res.data.retObj.latitude,
-            longitude: res.data.retObj.longitude,
-            code: res.data.retObj.code,
-            pointName: res.data.retObj.pointName,
-            locationName: res.data.retObj.locationName,
-            auditContent: res.data.retObj.auditContent,
-            questionContent: res.data.retObj.question,
-            quotaContent: res.data.retObj.quotaContent,
-            commitContent: res.data.retObj.commitContent,
-            findTime: res.data.retObj.findTime,
-            finishTime: res.data.retObj.finishTime,
-            longTask: res.data.retObj.longTask,
+            address: res.data.retObj.answerList.address,
+            locationName: res.data.retObj.answerList.locationName,
+            findTime: res.data.retObj.time,
             departmentName: departmentName,
-            remarks: res.data.retObj.remarks,
-            deptResult:res.data.retObj.deptResult || 0,
-            sortListStr: res.data.retObj.sortListStr,
-            que_res_img: images,
-            que_res_video: videos
+            uploadTime: res.data.retObj.uploadTime,
+            sortListStr:sorts,
+            remarks:res.data.retObj.answerList.remarks||'无',
+            addRemark:res.data.retObj.answerList.addRemark||'无',
+            reportImgSrc:images,
+            reportVideoSrc:videos
           })
-          console.log(that.data)
+
         }
+
       },
       (err) => {
 
@@ -648,12 +668,12 @@ Page({
     })
 
     for (var index = 0; index < mapImage.length; index++) {
-      await that.downlodaImage(mapImage[index]).then((res) => {})
+      await that.downlodaImage(mapImage[index]).then((res) => { })
     }
 
 
     for (var index = 0; index < mapVoid.length; index++) {
-      await that.downlodaVideo(mapVoid[index]).then((res) => {})
+      await that.downlodaVideo(mapVoid[index]).then((res) => { })
     }
 
     var mapAudio = []; //音频下载
@@ -666,7 +686,7 @@ Page({
       }
     }
     for (var index = 0; index < mapAudio.length; index++) {
-      await that.downlodaAudio(mapAudio[index]).then((res) => {})
+      await that.downlodaAudio(mapAudio[index]).then((res) => { })
     }
     wx.hideLoading();
   },
@@ -700,12 +720,12 @@ Page({
     }
 
     for (var index = 0; index < mapImage.length; index++) {
-      await that.downlodaImage_dep(mapImage[index]).then((res) => {})
+      await that.downlodaImage_dep(mapImage[index]).then((res) => { })
     }
 
 
     for (var index = 0; index < mapVoid.length; index++) {
-      await that.downlodaVideo_dep(mapVoid[index]).then((res) => {})
+      await that.downlodaVideo_dep(mapVoid[index]).then((res) => { })
     }
 
     var mapAudio = []; //音频下载
@@ -718,7 +738,7 @@ Page({
       }
     }
     for (var index = 0; index < mapAudio.length; index++) {
-      await that.downlodaAudio_dep(mapAudio[index]).then((res) => {})
+      await that.downlodaAudio_dep(mapAudio[index]).then((res) => { })
     }
     //console.log("视频数据：", that.data.videoList, "----", that.data.videoList_Dep)
     wx.hideLoading();
@@ -732,14 +752,11 @@ Page({
     var mapImage = []; //图片下载
     if (images_door != null) {
       for (var i = 0; i < images_door.length; i++) {
-        mapImage.push({
-          url: images_door[i].url.replaceAll('http:', 'https:'),
-          desc: images_door[i].description
-        })
+        mapImage.push({ url: images_door[i].url.replaceAll('http:', 'https:'), desc: images_door[i].description })
       }
     }
     for (var index = 0; index < mapImage.length; index++) {
-      await that.downlodaImage_door(mapImage[index]).then((res) => {})
+      await that.downlodaImage_door(mapImage[index]).then((res) => { })
     }
     wx.hideLoading();
   },
@@ -804,10 +821,7 @@ Page({
           if (res.statusCode === 200) {
             resolve(res.data)
             // console.log('图片下载成功' + res.tempFilePath)
-            imgList.push({
-              url: res.tempFilePath,
-              desc: images_door.desc
-            })
+            imgList.push({ url: res.tempFilePath, desc: images_door.desc })
             that.setData({
               imgList_door: imgList
             })
@@ -940,112 +954,64 @@ Page({
 
 
   ChooseImage(e) {
-    console.log(e)
-    //问题id 当做key 保存到单位资源map中
-    let ques_resId = e.currentTarget.dataset.quesresid
-    let that = this;
     wx.chooseImage({
       count: 1, //默认9
       sizeType: ['compressed'], //可以指定是原图还是压缩图，默认二者都有
       sourceType: ['camera'],
       success: (res) => {
-        that.uploadResource(ques_resId, res.tempFilePaths[0], 0)
-        // let dataMap = that.data.zgResMap
-        // dataMap[ques_resId] = {'url':res.tempFilePaths[0],'type':0}
-        // that.setData({
-        //   zgResMap:dataMap
-        // })
+        if (this.data.imgList.length != 0) {
+          this.setData({
+            imgList: this.data.imgList.concat(res.tempFilePaths),
+            modalName: '',
+            reportlength: this.data.reportlength + 1
+          })
+        } else {
+          this.setData({
+            imgList: res.tempFilePaths,
+            modalName: '',
+            reportlength: this.data.reportlength + 1
+          })
+        }
       }
     })
   },
 
-  chooseVideo(e) {
-    let that = this;
-    //问题id 当做key 保存到单位资源map中
-    let ques_resId = e.currentTarget.dataset.quesresid
+  chooseVideo() {
+    let vm = this;
+    //因为上传视频返回的数据类型与图片不一样  需要建缩略图的url放到数组中
+    var urlArray = [];
+    var obj = {
+      'src': '',
+      'poster': ''
+    };
     wx.chooseVideo({
       sourceType: ['camera'],
       maxDuration: 30,
       camera: 'back',
       success: (res) => {
-        console.log(res)
-        that.uploadResource(ques_resId, res.tempFilePath, 2)
-        // let dataMap = that.data.zgResMap
-        // dataMap[ques_resId] = {'url':res.tempFilePath,'type':2,'poster':res.thumbTempFilePath}
-        // that.setData({
-        //   zgResMap:dataMap
-        // })
+        obj.src = res.tempFilePath
+        obj.poster = res.thumbTempFilePath
+        urlArray.push(obj)
+        if (vm.data.videoList.length != 0) {
+          vm.setData({
+            videoList: vm.data.videoList.concat(urlArray),
+            modalName: '',
+            reportlength: vm.data.reportlength + 1
+          })
+          //  vm.data.videoSrcs.push(res.tempFilePath)
+        } else {
+          vm.setData({
+            videoList: urlArray,
+            modalName: '',
+            reportlength: vm.data.reportlength + 1
+          })
+          //  vm.data.videoSrcs.push(res.tempFilePath)
+        }
       }
     })
-  },
-  //上传资源
-  uploadResource: function (quesResId, filePath, type) {
-    var that = this;
-    var requestUrl = that.data.requestUrl; //请求路径
-    var terminalUserId = that.data.terminalUserId;
-    var projectId = that.data.projectId;
-    var taskId = that.data.taskId;
-    var code = that.data.code;
-    var key = new Date().getTime() + '_quesResId'
-    wx.showLoading({
-      title: '上传中',
-      mask: true
-    });
-    //上传
-    return new Promise((resolve, reject) => {
-      wx.uploadFile({
-        url: requestUrl + '/public/fieldTask/uploadAndSaveResource',
-        filePath: filePath,
-        name: key,
-        formData: {
-          'path': key,
-          'type': type,
-          'projectId': projectId,
-          'taskId': taskId,
-          'code': code,
-          'quesResId': quesResId,
-          'terminalUserId': terminalUserId
-        },
-        success(res) {
-          console.log(res)
-          var data = JSON.parse(res.data)
-          if (data.status == 'success') {
-            resolve(data)
-            var obj = data.retObj
-            let dataMap = that.data.zgResMap
-            dataMap[obj.quesResId] = {
-              'url': obj.url,
-              'type': obj.type,
-              'poster': obj.url
-            }
-            that.setData({
-              zgResMap: dataMap,
-              zgResNum:that.data.zgResNum + 1
-            })
-          } else {
-            wx.showToast({
-              title: '资源上传失败',
-              icon: 'none',
-              duration: 1000,
-              mask: true
-            })
-          }
-        },
-        //请求失败
-        fail: function (err) {
-          console.log(err)
-          wx.showToast({
-            title: '资源上传失败',
-            icon: 'none',
-            duration: 1000,
-            mask: true
-          })
-        },
-        complete: (res) => {
-          wx.hideLoading()
-        }
-      })
-    })
+
+
+
   },
   ViewImageFordoor(e) {
     wx.previewImage({
@@ -1065,14 +1031,6 @@ Page({
       current: e.currentTarget.dataset.url
     });
   },
-  ViewMedia(e) {
-    wx.previewMedia({
-      sources: [{
-        url: e.currentTarget.dataset.url,
-        type: e.currentTarget.dataset.type == 0 ? 'image' : 'video'
-      }],
-    });
-  },
   ViewImageForreport_Dep(e) {
     wx.previewImage({
       urls: this.data.imgList_Dep,
@@ -1080,25 +1038,27 @@ Page({
     });
   },
   ViewVideoForreport(e) {
-    //console.log("视频的啥？：", e);
+    console.log("视频的啥？：", e);
     this.VideoContext = wx.createVideoContext('reportVideo' + e.currentTarget.dataset.index);
-    this.VideoContext.requestFullScreen(0);
+    this.VideoContext.requestFullScreen({ direction: 0 });
   },
   ViewVideoForreport_Dep(e) {
-    //console.log("部门视频的啥？：", e);
+    console.log("部门视频的啥？：", e);
     this.VideoContext = wx.createVideoContext('reportVideoDep' + e.currentTarget.dataset.index);
-    this.VideoContext.requestFullScreen(0);
+    this.VideoContext.requestFullScreen({ direction: 0 });
+  },
+  start(e) {
+    let fullScreen = e.detail.fullScreen;
+    if (!fullScreen) {
+      this.VideoContext.pause();
+    } else {
+      this.VideoContext.play();
+    }
   },
 
-
   DelImg(e) {
-    let that = this
-    //问题id 整改资源key
-    var requestUrl = that.data.requestUrl
-    var queResId = e.currentTarget.dataset.quesresid;
-    var projectId = that.data.projectId;
-    var taskId = that.data.taskId;
-    let dataMap = that.data.zgResMap
+    // 'reportImg' 举报图片  'reportVideo' 举报视频 'addsImg'地址图片 'addsVideo' 地址视频
+    var type = e.currentTarget.dataset.type;
     wx.showModal({
       // title: '召唤师',
       content: '确定要删除这条图片/视频吗？',
@@ -1106,87 +1066,32 @@ Page({
       confirmText: '确定',
       success: res => {
         if (res.confirm) {
-          //调用全局 请求方法 发起请求删除
-          app.wxRequest(
-            'POST',
-            requestUrl + "/public/fieldTask/deleteTaskResource", {
-              'taskId': taskId,
-              'quesResId': queResId
-            },
-            app.seesionId,
-            (res) => {
-              //console.log("任务详情：", res.data)
-              if (res.data.status === "success") {
-                delete dataMap[queResId]
-                that.setData({
-                  zgResMap: dataMap,
-                  zgResNum:that.data.zgResNum - 1
-                })
-              }
-            },
-            (err) => {
-
-            }
-          )
+          if (type == "reportImg") {
+            this.data.imgList.splice(e.currentTarget.dataset.index, 1);
+            this.setData({
+              imgList: this.data.imgList,
+              reportlength: this.data.reportlength - 1
+            })
+          }
+          if (type == "reportVideo") {
+            this.data.videoList.splice(e.currentTarget.dataset.index, 1);
+            this.setData({
+              videoList: this.data.videoList,
+              reportlength: this.data.reportlength - 1
+            })
+          }
         }
       }
     })
   },
-changeTask(e){
-  //console.log(e)
-  var that = this
-  var requestUrl = that.data.requestUrl
-  // 0 完成上报  1提交  2不合格
-  var actionType = e.currentTarget.dataset.actiontype
-  var commitContent = that.data.commitContent == null?'':that.data.commitContent
-  var taskId = that.data.taskId;
-  var terminalUserId = that.data.terminalUserId;
-  if(actionType == 1 || actionType == 0){ //提交任务, 验证是否提交完整改数据
-    if(that.data.quesResNum != that.data.zgResNum){
-      app.msg('整改资源未上传完整，请整改单位完全上传后，再提交！')
-      return
-    }/*else if(that.data.commitContent == '' || that.data.commitContent == null){
-      app.msg('整改描述为空，请整改单位完成整改描述后，再提交！')
-      return
-    }*/
-  }
-  //调用全局 请求方法 发起请求删除
-  app.wxRequest(
-    'POST',
-    requestUrl + "/public/fieldTask/updateTaskInfo", {
-      'terminalUserId':terminalUserId,
-      'taskId': taskId,
-      'remarks':commitContent,
-      'type':actionType
-    },
-    app.seesionId,
-    (res) => {
-      console.log("任务详情：", res.data)
-      if (res.data.status == "success") {
-        router.navigateBack({
-          delta: 1,
-        })
-        // if(actionType == 1){
-        //   router.navigateBack({
-        //     delta: 1,
-        //   })
-        // }
-      }else{
-        app.alert('信息保存失败')
-      }
-    },
-    (err) => {
 
-    }
-  )
-},
   hideModal(e) {
     this.setData({
       modalName: null
     })
   },
   textareaAInput(e) {
-    this.data.commitContent = e.detail.value;
+    this.data.textDesc = e.detail.value;
   },
   go() {
     var that = this;
@@ -1276,22 +1181,22 @@ changeTask(e){
       })
       return
     }
-    // if (that.data.longtask == 1 && !that.data.long_task_finish_Time) {
-    //   wx.showToast({
-    //     title: '您已开启长期整改,请设置任务结束时间',
-    //     icon: 'none',
-    //     duration: 1000,
-    //     mask: true
-    //   })
-    //   return
-    // }
+    if (that.data.longtask == 1 && !that.data.long_task_finish_Time) {
+      wx.showToast({
+        title: '您已开启长期整改,请设置任务结束时间',
+        icon: 'none',
+        duration: 1000,
+        mask: true
+      })
+      return
+    }
     wx.showLoading({
       title: '提交中',
       mask: true
     })
     for (var index = 0; index < reportImg.length; index++) {
       //举报图片
-      await that.uploadImage(reportImg[index], index).then((res) => {
+      await that.uploadImage(reportImg[index]).then((res) => {
         // console.log("图片上传完了resourceList:",that.data.resourceList.length);
 
       })
@@ -1322,6 +1227,12 @@ changeTask(e){
         title: '资源上传中',
         mask: true
       })
+      // wx.showToast({
+      //   title: '资源上传中',
+      //   icon: 'none',
+      //   duration: 1000,
+      //   mask: true
+      // })
       console.log("全部上传成功了")
       that.uploadAnswerTrue();
       wx.hideLoading()
@@ -1339,77 +1250,14 @@ changeTask(e){
 
     }
   },
-  //举报图片集合
-  // uploadImage: function (filePath, index) {
-  //   var that = this;
-  //   var requestUrl = that.data.requestUrl; //请求路径
-  //   //举报图片集合
-  //   var reportImg = that.data.imgList;
-  //   //console.log("图片长传集合：", reportImg, "图片长度：", reportImg.length)
-  //   var i = that.data.i;
-  //   var success = that.data.success;
-  //   var fail = that.data.fail;
-  //   var resourceList = that.data.resourceList;
-
-  //   var terminalUserId = that.data.terminalUserId;
-  //   var projectId = that.data.projectId;
-  //   var taskId = that.data.taskId;
-  //   var code = that.data.code;
-  //   var key = new Date().getTime() + '_'+index
-  //   //上传举报图片
-  //   return new Promise((resolve, reject) => {
-  //     wx.uploadFile({
-  //       url: requestUrl + '/public/fieldTask/upload',
-  //       name: 'reportImg-' + key,
-  //       filePath: filePath,
-  //       formData: {
-  //         'path': 'reportImg-' + key,
-  //         'taskId':taskId,
-  //         'projectId': projectId,
-  //         'type': 0,
-  //         'code': code
-  //       },
-  //       success(res) {
-  //         console.log('提交的key:'+key)
-  //         console.log('提交的filePath:'+filePath)
-
-  //         var imageMap = JSON.parse(res.data);
-  //         if (imageMap.url != null && imageMap.url != '') {
-  //           console.log("新的提交数据：", imageMap)
-  //           // 操作成功
-  //           resourceList.push({
-  //             url: imageMap.url,
-  //             type: 0,
-  //             name: key,
-  //             status:1
-  //           })
-  //           resolve(res.data)
-  //         } else {
-  //           wx.showToast({
-  //             title: '图片资源上传失败',
-  //             icon: 'none',
-  //             duration: 1000,
-  //             mask: true
-  //           })
-  //         }
-
-  //       },
-  //       //请求失败
-  //       fail: function (err) {},
-  //       complete: () => {
-
-  //       }
-  //     })
-  //   })
-  // },
 
   //举报图片集合
-  uploadImage: function (filePath, index) {
+  uploadImage: function (filePath) {
     var that = this;
     var requestUrl = that.data.requestUrl; //请求路径
     //举报图片集合
     var reportImg = that.data.imgList;
-    //console.log("图片长传集合：", reportImg, "图片长度：", reportImg.length)
+    console.log("图片长传集合：", reportImg, "图片长度：", reportImg.length)
     var i = that.data.i;
     var success = that.data.success;
     var fail = that.data.fail;
@@ -1419,18 +1267,17 @@ changeTask(e){
     var projectId = that.data.projectId;
     var taskId = that.data.taskId;
     var code = that.data.code;
-    var key = new Date().getTime() + '_' + index
+
 
     //上传举报图片
     //
     return new Promise((resolve, reject) => {
-      console.log(key)
       wx.uploadFile({
-        url: requestUrl + '/public/fieldTask/upload',
+        url: requestUrl + '/mobile/fieldTask/upload',
         filePath: filePath,
-        name: 'reportImg' + key,
+        name: 'reportImg' + i + terminalUserId,
         formData: {
-          'path': 'reportImg' + key,
+          'path': 'reportImg' + i + terminalUserId,
           'type': '0',
           'projectId': projectId,
           'taskId': taskId,
@@ -1446,8 +1293,7 @@ changeTask(e){
             resourceList.push({
               url: imageMap.url,
               type: 0,
-              name: key,
-              status: 1
+              name: '现在没找到方法'
             })
 
           } else {
@@ -1481,6 +1327,7 @@ changeTask(e){
 
       })
     })
+
   },
   //举报视频集合
   uploadVideo: function (filePath) {
@@ -1499,7 +1346,7 @@ changeTask(e){
 
     return new Promise((resolve, reject) => {
       wx.uploadFile({
-        url: requestUrl + '/public/fieldTask/upload',
+        url: requestUrl + '/mobile/fieldTask/upload',
         filePath: filePath,
         name: 'reportVideo' + i + terminalUserId,
         formData: {
@@ -1518,8 +1365,7 @@ changeTask(e){
             resourceList.push({
               url: voidMap.url,
               type: 2,
-              name: new Date().getTime() + '_' + i,
-              status: 1
+              name: '还没找到方法'
             })
           } else {
             wx.showToast({
@@ -1574,7 +1420,7 @@ changeTask(e){
     console.log('格式', audioSrc)
     return new Promise((resolve, reject) => {
       wx.uploadFile({
-        url: requestUrl + '/public/fieldTask/upload',
+        url: requestUrl + '/mobile/fieldTask/upload',
         filePath: filePath,
         name: 'audioSrc' + terminalUserId,
         formData: {
@@ -1593,8 +1439,7 @@ changeTask(e){
             resourceList.push({
               url: audioMap.url,
               type: 1,
-              name: new Date().getTime() + '_' + i,
-              status: 1
+              name: '现在还没找到方法'
             })
           } else {
             wx.showToast({
@@ -1644,13 +1489,13 @@ changeTask(e){
     var projectId = that.data.projectId;
     //复选框
     var dissent = that.data.dissent;
-    console.log("dept_task_detail.js:" + terminalUserId);
+
     //调用全局 请求方法
     app.wxRequest(
       'POST',
-      requestUrl + '/public/fieldTask/saveTaskInfo', {
+      requestUrl + '/mobile/fieldTask/saveResourceByNew',
+      {
         terminalUserId: terminalUserId,
-        //terminalUserId:'4028941c8e832054018e839b56310000',
         taskId: taskId,
         remarks: remarks,
         dissent: dissent,
@@ -1686,7 +1531,8 @@ changeTask(e){
     //调用全局 请求方法
     app.wxRequest(
       'POST',
-      that.data.requestUrl + '/mobile/fieldTask/getTaskLogByTaskId', {
+      that.data.requestUrl + '/mobile/fieldTask/getTaskLogByTaskId',
+      {
         taskId: that.data.taskId,
       },
       app.seesionId,
@@ -1723,45 +1569,62 @@ changeTask(e){
       process_auditContent: e.detail.value,
     })
   },
+  set_pubRemark: function (e) {
+    this.setData({
+      pubRemark: e.detail.value,
+    })
+  },
+  //更新全权属异议原因
+  set_dissent_auditContent: function (e) {
+    this.setData({
+      dissent_auditContent: e.detail.value,
+    })
+  },
+  //审核方法
+  //合格 0  0
+  //不合格 2  0
+  //长期整改  2  1
   process_fun: function (e) {
     //合格 0  0
     //不合格 2  0
     //长期整改  2  1
     var that = this;
+    var projectId = that.data.projectId;
     // 0批量通过  1批量不通过  2批量长期整改
     var result_type = e.currentTarget.dataset.resulttype
     var taskId = that.data.taskId
     var auditContent = that.data.process_auditContent
-    if (!auditContent && result_type != 0) {
-      app.msg('请输入审批意见~')
-      return
-    }
+    var pubRemark = that.data.pubRemark
     if (auditContent.length > 500) {
       app.msg('审批意见不能超过500字')
       return
     }
     var param;
     if (result_type == 0) {
-      //批量合格
+      //合格
       param = {
         id: taskId,
+        projectId: projectId,
         result: 0,
-        longTask: 0,
         auditContent: auditContent,
+        pubRemark:pubRemark
       }
     } else {
-      //批量不合格\长期整改
+      //不合格\长期整改
       param = {
         id: taskId,
+        projectId: projectId,
         result: 2,
         longTask: result_type == 1 ? 0 : 1,
         auditContent: auditContent,
       }
     }
+    param.userId = app.terminalUserId
+    param.dissent = that.data.dissent
     //调用全局 请求方法
     app.wxRequest(
       'POST',
-      that.data.requestUrl + "/mobile/fieldTask/leadDeptCheckByMobile",
+      that.data.requestUrl + "/home/manage/check",
       param,
       app.seesionId,
       (res) => {
@@ -1783,39 +1646,277 @@ changeTask(e){
       }
     )
   },
-  getGovPro: function (e) {
+  //权属异议 拒绝调整单位
+  refuse_fun: function (e) {
     var that = this;
+    var auditContent = that.data.process_auditContent
+    if (auditContent.length > 500) {
+      app.msg('审批意见不能超过500字')
+      return
+    }
+    var param = {
+      id: that.data.taskId,
+      departmentId: e.currentTarget.dataset.departmentid,
+      auditContent: that.data.process_auditContent,
+      userId:app.terminalUserId
+    }
+    wx.showModal({
+      title: '提示',
+      content: '您即将将该任务打回所属单位，是否确认？',
+      success(res) {
+        if (res.confirm) {
+          //调用全局 请求方法
+          app.wxRequest(
+            'POST',
+            that.data.requestUrl + "/home/manage/refuse",
+            param,
+            app.seesionId,
+            (res) => {
+              console.log(res)
+              var data = res.data
+              if (data.status = "success") {
+                app.alert("审核成功")
+                router.navigateBack({
+                  delta: 1,
+                })
+                //刷新列表
+                //that.search_fun()
+              } else {
+                app.alert("请求失败")
+              }
+            },
+            (err) => {
+              app.alert("网络错误")
+            }
+          )
+        } else if (res.cancel) {
+          console.log('用户点击取消')
+        }
+      }
+    })
+
+  },
+  //权属异议 调整单位页面
+  open_update_dept_page: function (e) {
+    var that = this;
+    //调用全局 请求方法
     app.wxRequest(
-      'GET',
-      requestUrl + '/mobile/fieldTask/getGovProByWX', {
-        projectId: that.data.projectId
-      },
+      'POST',
+      that.data.requestUrl + "/home/manage/getDeptListByProjectId",
+      { projectId: that.data.projectId },
       app.seesionId,
       (res) => {
-        var govPro = res.data.retObj.govPro
-        //是否为牵头配合模式
-        var dissentTime = govPro.dissentTime
-        var dissent_show = true
-        var showAddress = true
-        if (dissentTime) {
-          var date = new Date(dissentTime).getTime();
-          var timestamp = new Date().getTime(); //获取当前时间戳
-          if (date < timestamp) {
-            dissent_show = false
-          }
+        console.log(res)
+        var data = res.data
+        if (data.status = "success") {
+          var departmentList = data.retObj
+          // for (let i = 0; i < departmentList.length; i++) {
+          //   var department = departmentList[i]
+          //   for (let t = 0; t < task_departmentList.length; t++) {
+          //     if (department.id == task_departmentList[t].departmentId) {
+          //       that.setData({
+          //         update_select_dept: department
+          //       })
+          //       break;
+          //     }
+          //   }
+          // }
+          that.setData({
+            departmentList: departmentList,
+            modalName: 'updateDept'
+          })
+          //that.check_dept(departmentList)
+        } else {
+          app.alert("请求失败")
         }
-        var showAddress = obj.govPro.showAddress;
-        if (showAddress == 0) {
-          showAddress = false
-        }
-        that.setData({
-          dissent_show: dissent_show,
-          showAddress: showAddress
-        })
       },
       (err) => {
-
+        app.alert("网络错误")
       }
     )
   },
+  check_dept: function (departmentList) {
+    if (departmentList) {
+      var that = this;
+      //调用全局 请求方法
+      app.wxRequest(
+        'POST',
+        that.data.requestUrl + "/mobile/fieldTask/getDepartmentListByTaskIdByNew",
+        { taskId: that.data.taskId, projectId: that.data.projectId },
+        app.seesionId,
+        (res) => {
+          var data = res.data
+          if (data.status = "success") {
+            var obj = data.retObj
+            var isDepartType = obj.isDepartType
+            var task_departmentList = obj.departmentList
+            var task_leadDepartmentList = obj.leadDepartmentList
+            var leadDepartment_ids = '';
+            var department_ids = '';
+            if (isDepartType == 1) {//牵头模式
+              var show_leadDepartmentList = [];
+              var show_departmentList = [];
+              for (let i = 0; i < departmentList.length; i++) {
+                var department = departmentList[i]
+                for (let t = 0; t < task_departmentList.length; t++) {
+                  if (department.id == task_departmentList[t].departmentId) {
+                    department_ids += task_departmentList[t].departmentId + ','
+                    department.check = true
+                    show_departmentList.push(department)
+                    continue;
+                  }
+                }
+                for (let y = 0; y < task_leadDepartmentList.length; y++) {
+                  if (department.id == task_leadDepartmentList[y].departmentId) {
+                    leadDepartment_ids += task_leadDepartmentList[y].departmentId + ','
+                    department.check = true
+                    show_leadDepartmentList.push(department);
+                    continue;
+                  }
+                }
+                if (!department.check) {
+                  department.check = false
+                  show_leadDepartmentList.push(department);
+                  show_departmentList.push(department)
+                }
+              }
+              that.setData({
+                isDepartType: isDepartType,
+                departmentList: show_departmentList,
+                leadDepartmentList: show_leadDepartmentList,
+                select_deptIds: department_ids.substring(0, department_ids.length - 1),
+                select_lead_deptIds: leadDepartment_ids.substring(0, department_ids.length - 1),
+                modalName: 'updateDept'
+              })
+            } else {
+              for (let i = 0; i < departmentList.length; i++) {
+                var department = departmentList[i]
+                for (let t = 0; t < task_departmentList.length; t++) {
+                  if (department.id == task_departmentList[t].departmentId) {
+                    that.setData({
+                      update_select_dept: department
+                    })
+                    break;
+                  }
+                }
+              }
+              that.setData({
+                isDepartType: isDepartType,
+                departmentList: departmentList,
+                modalName: 'updateDept'
+              })
+            }
+          } else {
+            app.alert("请求失败")
+          }
+        },
+        (err) => {
+          app.alert("网络错误")
+        }
+      )
+    }
+  },
+  updateDeptChange: function (e) {
+    var that = this;
+    that.setData({
+      update_select_dept: that.data.departmentList[e.detail.value]
+    })
+  },
+  //监听责任单位多选框
+  set_select_deptIds: function (e) {
+    var that = this;
+    that.setData({
+      select_deptIds: e.detail.value + ''
+    })
+  },
+  //监听牵头责任单位多选框
+  set_select_lead_deptIds: function (e) {
+    var that = this;
+    that.setData({
+      select_lead_deptIds: e.detail.value + ''
+    })
+  },
+  updateDept: function (e) {
+    var that = this;
+    var projectId = that.data.projectId
+    var taskId = that.data.taskId;
+    var auditContent = ''
+    if (that.data.dissent_auditContent) {
+      auditContent = that.data.dissent_auditContent
+    }
+    if (auditContent && auditContent.length > 500) {
+      app.msg('审批意见不能超过500字')
+      return
+    }
+    var param = {
+      id: taskId,
+      projectId: projectId,
+      auditContent: auditContent,
+      userId:app.terminalUserId
+    }
+      if (!that.data.update_select_dept) {
+        app.alert('请选择部门')
+        return
+      }
+      param.departmentId = that.data.update_select_dept.id
+    //调用全局 请求方法
+    app.wxRequest(
+      'POST',
+      that.data.requestUrl + "/home/manage/updateDepartment",
+      param,
+      app.seesionId,
+      (res) => {
+        //console.log(res)
+        var data = res.data
+        if (data.status = "success") {
+          app.alert("更新成功")
+          that.setData({
+            modalName: ''
+          })
+          router.navigateBack({
+            delta: 1,
+          })
+        } else {
+          app.alert("请求失败")
+        }
+      },
+      (err) => {
+        app.alert("网络错误")
+      }
+    )
+  },
+  get_switch_result(e){
+    if(e.detail.value){
+      this.setData({
+        dissent:1
+      })
+    }else{
+      this.setData({
+        dissent:0
+      })
+    }
+  },
+  focus(){
+    console.log('获取交单')
+  },
+     //查看 图片 举报图片
+    ViewImageForReport(e) {
+       console.log("图片数据：", e);
+      wx.previewImage({
+        urls: this.data.reportImgSrc,
+        current: e.currentTarget.dataset.url
+      });
+    },
+    ViewVideoForReport(e) {
+      this.VideoContext = wx.createVideoContext('reportVideo' + e.currentTarget.dataset.index);
+      this.VideoContext.requestFullScreen(0);
+    },
+    ViewMedia(e) {
+      wx.previewMedia({
+        sources: [{
+          url: e.currentTarget.dataset.url,
+          type: e.currentTarget.dataset.type == 0 ? 'image' : 'video'
+        }],
+      });
+    },
 })

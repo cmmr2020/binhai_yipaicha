@@ -1,0 +1,52 @@
+<view class="cu-bar bg-white-user  solid-bottom  ">
+  <view class="text-sm1 text-bold">
+    <!--  <text class="cuIcon-title text-blue "></text>{{pointName}} -->
+    <text class="cuIcon-favor text-{{bgColor}} " style="font-size:{{fontSize}}rpx"></text><text style="font-size:{{fontSize35}}rpx">信息详情</text>
+  </view>
+
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">责任单位:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{departmentName}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">信息类型:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{sortListStr}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">信息描述:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{remarks}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">上报时间:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{findTime}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">上报点位:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{locationName}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">上报位置描述:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{address}}</text>
+</view>
+<view class="cu-form-group ">
+  <view class="title text-bold" style="font-size:{{fontSize}}rpx">地理位置:</view>
+  <text class="item-left" style="font-size:{{fontSize28}}rpx">{{addRemark}}</text>
+</view>
+<view>
+  <tui-divider gradual="{{true}}" gradualColor="{{gradualColor}}">
+    <text class="text-grey h1" style="font-size:{{fontSize35}}rpx">信息资源</text>
+  </tui-divider>
+</view>
+<view class="cu-form-group">
+  <view class="grid col-4 grid-square flex-sub">
+    <view class="bg-img" wx:for="{{reportImgSrc}}" wx:key="index" bindtap="ViewMedia" data-type='0' data-url="{{reportImgSrc[index]}}">
+      <!-- <image class="imgeaaa" src='{{reportImgSrc[index]}}' mode='aspectFill'></image> -->
+      <image src="{{reportImgSrc[index]}}" mode='aspectFill' style="max-width: 100%;" bindtap="ViewMedia" data-url="{{reportImgSrc[index]}}" data-type="0"></image>
+    </view>
+    <view class="bg-img" wx:for="{{reportVideoSrc}}" wx:key="index" bindtap="ViewMedia" data-type='1' data-url="{{reportVideoSrc[index]}}" data-index="{{index}}">
+      <video class="imgeaaa" id='reportVideo{{index}}' src="{{reportVideoSrc}}" poster="{{reportVideoSrc[index].poster}}"  object-fit="contain"  picture-in-picture-mode="push">
+      </video>
+    </view>
+  </view>
+</view>

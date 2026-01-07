@@ -4,6 +4,9 @@ var app = getApp()
 var rectifyFlag = false;
 //各tab参数 
 var request_dataParam_map = new Map();
+var finishTimeSortType = -1; 
+var deptResult = '';
+var deptSubStatusOrder = 0;
 Page({
   data: {
     rightId:wx.getStorageSync('rightId') || 0,
@@ -29,21 +32,8 @@ Page({
     //空内容提示标识
     isNull: '',
     date: '',
-    problemType_user: [{
-      id: 0,
-      name: '待整改'
-    }, {
-      id: 1,
-      name: '已整改'
-    }, 
-    // {
-    //   id: 2,
-    //   name: '长期整改'
-    // },
-    {
-      id: 3,
-      name: '整改合格'
-    }],
+    //滑动菜单
+    problemType_user: [],
     //任务列表清楚参数实体
     task_request_dataParam: {
 
@@ -63,6 +53,8 @@ Page({
    zgListTitle:'',//整改单列表页面标题
    selectzgOticeId:'',//正常查看的整改单id
    outType:0,// 0其他  返回式刷新页面  1 查看整改单  返回不刷新
+    //是否可以提交
+    isTijiao:false,
   },
   /**
    * 生命周期函数--监听页面加载
@@ -85,7 +77,28 @@ Page({
       bgColor: bgColor,
       fontSize30: parseInt(fontSize),
       fontSize26: parseInt(fontSize) - 12,
-      fontSize28: parseInt(fontSize) - 7
+      fontSize28: parseInt(fontSize) - 7,
+      isTijiao:(app.deptRoleName=='责任单位-T'?true:false),
+      problemType_user: app.deptRoleName=='责任单位-T'?[{
+        id: 0,
+        name: '常规未整改'
+      }, {
+        id: 1,
+        name: '整改单未整改'
+      },  {
+        id: 2,
+        name: '待审核'
+      }, 
+      {
+        id: 3,
+        name: '整改通过'
+      }]:[{
+        id: 0,
+        name: '常规未整改'
+      }, {
+        id: 1,
+        name: '整改单未整改'
+      }],
     })
     that.getZgOticeList();
     //加载项目列表
@@ -328,61 +341,65 @@ Page({
     //当前tab
     if (TabCur >= 0) {
       that.data.task_request_dataParam.projectId = projectId;
-      that.data.task_request_dataParam.pageNum = that.data.pagenum;
+      that.data.task_request_dataParam.page = that.data.pagenum;
       if (!pageSize) {
         that.data.task_request_dataParam.pageSize = 5;
       } else {
         that.data.task_request_dataParam.pageSize = pageSize;
       }
       that.data.task_request_dataParam.terminalUserId = terminalUserId;
-      if (TabCur == 0) {//待整改（未整改/整改不达标继续整改）
+      if (TabCur == 0) {//常规未整改
         that.data.task_request_dataParam.result = 9
-        that.data.task_request_dataParam.longTask = 0
-      } else if (TabCur == 1) {//已整改
+        that.data.task_request_dataParam.taskType = 0
+        that.data.task_request_dataParam.deptResult = deptResult
+        that.data.task_request_dataParam.deptSubStatusOrder = deptSubStatusOrder
+      } else if (TabCur == 1) {//整改单未整改
+        that.data.task_request_dataParam.result = 9
+        that.data.task_request_dataParam.taskType = 1
+        that.data.task_request_dataParam.deptResult = deptResult
+        that.data.task_request_dataParam.deptSubStatusOrder = deptSubStatusOrder
+      } else if (TabCur == 2) {//待审核
         that.data.task_request_dataParam.result = 3
-      } else if (TabCur == 2) {//长期整改
-        that.data.task_request_dataParam.result = 2
-        that.data.task_request_dataParam.longTask = 1
+        that.data.task_request_dataParam.taskType = ''
       } else if (TabCur == 3) {//整改合格
         that.data.task_request_dataParam.result = 0
-      } else if (TabCur == 4) {//待审核
-        that.data.task_request_dataParam.result = 4
+        that.data.task_request_dataParam.taskType = ''
       }
     }
-    //console.log(that.data.task_request_dataParam);
     //调用全局 请求方法
     app.wxRequest(
       'GET',
-      requestUrl + "/public/fieldTask/getPublicFieldTaskRectifyList",
+      requestUrl + "/public/fieldTask/getPublicFieldTaskRectifyAllListByWx",
       that.data.task_request_dataParam,
       app.seesionId,
       (res) => {
+        console.log(res.data)
         var list = res.data.retObj.list;
-        console.log(list)
-        if (list != 0) {
+        if (list && list.length > 0) {
           that.setData({
             //1、that.data.taskList  获取当前页面存的taskList数组
             //2、res.data.retObj   获取当前请求得到的taskList数组
             //3、xxx.concat  把新加载的数组追加到当前页面之后
             taskList: that.data.taskList.concat(res.data.retObj.list),
             maxPageNum: res.data.retObj.pageCount, //总页数
-            isNull: ''
+            taskCount:res.data.retObj.count,
+            isNull: '',
+            cardId:pageScrollto_id==null?"":pageScrollto_id//如果id不为空 则为测评页面返回 定位到跳转之前的位置
           })
-          //console.log(pageScrollto_id)
-          if (pageScrollto_id) {//如果id不为空 则为测评页面返回 定位到跳转之前的位置
-            wx.pageScrollTo({
-              selector: '#' + pageScrollto_id,//选择器
-              offsetTop: -200,//偏移距离，需要和 selector 参数搭配使用，可以滚动到 selector 加偏移距离的位置，单位 px
-              duration: 0,//滚动动画的时长，单位 ms
-            })
-          }
 
+           //因为 <scroll-view> 中 scroll-into-view 二次设置重复值时 失效引发bug 所以在执行后定时在500毫秒后设置为空字符串
+           setTimeout(() => {
+            that.setData({
+              cardId:''
+            })
+        }, 500)
           //console.log("看看这个任务列表：", that.data.taskList)
         } else {
           app.msg('暂无数据')
           that.setData({
             //isNull: 'true',
-            maxPageNum: 1
+            maxPageNum: 1,
+            taskCount:0
           })
         }
         that.hideModal();
@@ -391,6 +408,43 @@ Page({
 
       }
     )
+  },
+  search_radio(e){
+    var that = this
+    var detail = e.detail
+    if(detail.value == '2'){//显示全部任务
+      deptResult = ''
+    }else{//分别显示已上传或未上传的任务  
+      deptResult = detail.value
+    }
+    that.search_fun();
+  },
+  search_checkbox(e){
+    var that = this;
+    var detail = e.detail.value
+    if(detail.length > 0){//优先显示 上报不合格任务
+      deptSubStatusOrder = 1
+    }else{//优先显示正常任务
+      deptSubStatusOrder = 0
+    }
+    that.search_fun();
+  },
+  search_finishSort(){
+    var that = this;
+    var data_param;
+    if(finishTimeSortType == -1 || finishTimeSortType == 0){
+      finishTimeSortType = 1
+    }else{
+      finishTimeSortType == 0
+    }
+    if (request_dataParam_map.has(that.data.TabCur)) {
+      data_param = request_dataParam_map.get(that.data.TabCur)
+    } else {
+      data_param = {};
+    }
+    data_param.finishTimeSort = finishTimeSortType
+    request_dataParam_map.set(that.data.TabCur, data_param)
+    that.search_fun();
   },
   //查询触发方法
   search_fun() {
@@ -403,33 +457,62 @@ Page({
     this.getTaskList()
   },
   //上拉函数
-  onReachBottom: function () { //触底开始下一页
-    var that = this;
-    var pagenum = that.data.pagenum + 1; //获取当前页数并+1
-    that.setData({
-      pagenum: pagenum, //更新当前页数
-    })
-    if (that.data.maxPageNum >= pagenum) {
-      if (that.data.TabCur != null) {
-        that.getTaskList(); //重新调用请求获取下一页数据
+  // onReachBottom: function () { //触底开始下一页
+  //   var that = this;
+  //   var pagenum = that.data.pagenum + 1; //获取当前页数并+1
+  //   that.setData({
+  //     pagenum: pagenum, //更新当前页数
+  //   })
+  //   if (that.data.maxPageNum >= pagenum) {
+  //     if (that.data.TabCur != null) {
+  //       that.getTaskList(); //重新调用请求获取下一页数据
+  //     }
+  //     // 显示加载图标
+  //     wx.showLoading({
+  //       title: '玩命加载中',
+  //     })
+
+  //   } else {
+  //     // 显示加载图标
+  //     wx.showLoading({
+  //       title: '没有更多了',
+  //     })
+
+  //   }
+  //   // 隐藏加载框
+  //   setTimeout(function () {
+  //     wx.hideLoading()
+  //   }, 1000)
+  // },
+    //上拉函数
+    loadMore: function () { //触底开始下一页
+      var that = this;
+      var pagenum = that.data.pagenum + 1; //获取当前页数并+1
+      console.log('当前页:'+pagenum)
+      that.setData({
+        pagenum: pagenum, //更新当前页数
+      })
+      if (that.data.maxPageNum >= pagenum) {
+        if (that.data.TabCur != null) {
+          that.getTaskList(); //重新调用请求获取下一页数据
+        }
+        // 显示加载图标
+        wx.showLoading({
+          title: '玩命加载中',
+        })
+  
+      } else {
+        // 显示加载图标
+        wx.showLoading({
+          title: '没有更多了',
+        })
+  
       }
-      // 显示加载图标
-      wx.showLoading({
-        title: '玩命加载中',
-      })
-
-    } else {
-      // 显示加载图标
-      wx.showLoading({
-        title: '没有更多了',
-      })
-
-    }
-    // 隐藏加载框
-    setTimeout(function () {
-      wx.hideLoading()
-    }, 1000)
-  },
+      // 隐藏加载框
+      setTimeout(function () {
+        wx.hideLoading()
+      }, 1000)
+    },
   showSearchModal(e) {
     var that = this;
     if (request_dataParam_map.has(that.data.TabCur)) {
@@ -480,16 +563,18 @@ Page({
     } else {
       data_param = {};
     }
-    if (type == 'code') {
-      data_param.taskCode = e.detail.value
+    if (type == 'sort') {
+      data_param.sortName = e.detail.value
+    } else if (type == 'remarks') {
+      data_param.remarks = e.detail.value
     } else if (type == 'location') {
       data_param.locationName = e.detail.value
-    } else if (type == 'question') {
-      data_param.question = e.detail.value
-    } else if (type == 'point') {
-      data_param.pointName = e.detail.value
+    } else if (type == 'address') {
+      data_param.address = e.detail.value
+    } else if (type == 'addremark') {
+      data_param.addRemark = e.detail.value
     }
-    request_dataParam_map = request_dataParam_map.set(that.data.TabCur, data_param)
+    request_dataParam_map.set(that.data.TabCur, data_param)
   },
   //长按复制任务编号
   copyCode: function (e) {
@@ -543,6 +628,7 @@ Page({
     this.setData({
       batch_process_taskIdArr: e.detail.value
     })
+    console.log(this.data.batch_process_taskIdArr)
   },
   //选中任务点击批量审批按钮 弹窗显示审批意见输入框
   show_auditContent_modal(e) {
@@ -565,67 +651,51 @@ Page({
   },
   //批量审核方法
   batch_process: function (e) {
-    //合格 0  0
-    //不合格 2  0
-    //长期整改  2  1
     var that = this;
-    // console.log(that.data.batch_process_taskIdArr)
-    // console.log(that.data.process_auditContent)
-    // console.log(e.currentTarget.dataset.resulttype)
-    // 0批量通过  1批量不通过  2批量长期整改
+    var terminalUserId = that.data.terminalUserId;
+    var resulttype = e.currentTarget.dataset.resulttype
+    let msg = resulttype == 0?'提交':'不合格'
+    // 0提交  1不合格
     var result_type = e.currentTarget.dataset.resulttype
     var taskIds = that.data.batch_process_taskIdArr + ''
-    var auditContent = that.data.process_auditContent
-    if (!auditContent && result_type!=0) {
-      app.msg('请输入审批意见~')
-      return
+    if(!taskIds){
+        app.msg('请选择要审核的任务')
+        return
     }
-    if (auditContent.length > 500) {
-      app.msg('审批意见不能超过500字')
-      return
-    }
-    var param;
-    if (result_type == 0) {
-      //批量合格
-      param = {
-        taskIds: taskIds,
-        result: 0,
-        longTask: 0,
-        auditContent: auditContent,
-      }
-    } else {
-      //批量不合格\长期整改
-      param = {
-        taskIds: taskIds,
-        result: 2,
-        longTask: result_type == 1 ? 0 : 1,
-        auditContent: auditContent,
-      }
-    }
-    //调用全局 请求方法
-    app.wxRequest(
-      'POST',
-      that.data.requestUrl + "/mobile/fieldTask/batchDeptTypeCheckByMobile",
-      param,
-      app.seesionId,
-      (res) => {
-        console.log(res)
-        var data = res.data
-        if (data.status = "success") {
-          app.alert("审核成功")
-          that.setData({
-            modalName: ''
-          })
-          //刷新列表
-          that.search_fun()
-        } else {
-          app.alert("请求失败")
+    wx.showModal({
+      content: '确定要批量'+msg+'这些任务吗？',
+      cancelText: '取消',
+      confirmText: '确定',
+      success: res => {
+        if (res.confirm) {
+          var param = {
+            terminalUserId:terminalUserId,
+            taskIds:taskIds,
+            type:result_type
+          };
+          //调用全局 请求方法
+          app.wxRequest(
+            'POST',
+            that.data.requestUrl + "/public/fieldTask/batchSubmitTaskByTaskIds",
+            param,
+            app.seesionId,
+            (res) => {
+              console.log(res)
+              var data = res.data
+              if (data.status = "success") {
+                app.alert("操作成功")
+                //刷新列表
+                that.search_fun()
+              } else {
+                app.alert("请求失败")
+              }
+            },
+            (err) => {
+              app.alert("网络错误")
+            }
+          )
         }
-      },
-      (err) => {
-        app.alert("网络错误")
       }
-    )
-    ///fieldTask/batchDeptTypeCheck.json
+    })
   }
 })

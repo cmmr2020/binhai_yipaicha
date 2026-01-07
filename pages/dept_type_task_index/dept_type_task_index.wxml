@@ -1,4 +1,5 @@
-<scroll-view scroll-y class="DrawerPage {{modalName=='viewModal'?'show':''}}">
+<!-- <scroll-view scroll-y class="DrawerPage {{modalName=='viewModal'?'show':''}}"> -->
+  <scroll-view scroll-y ="true" enable-back-to-top="true"  scroll-into-view="{{cardId}}" 	scroll-into-view-offset="-200"	bindscrolltolower="loadMore" class="DrawerPage {{modalName=='viewModal'?'show':''}}">
 <view class="solid">
   <!-- 导航栏-->
   <scroll-view scroll-x class="bg-white nav text-center" scroll-with-animation scroll-left="{{scrollLeft}}">
@@ -6,29 +7,77 @@
       {{item.name}}
     </view>
   </scroll-view>
+<view class="cu-bar bg-white padding solid" wx:if="{{TabCur==0 || TabCur==1}}">
+  <view class="action" style="display: inline-flex;margin: auto;width: 100%;">
+    <view style="margin: auto;">
+    <radio-group bindchange="search_radio">
+      <radio class="radio" value="1"></radio>
+      <text> 已上报 </text>
+      <radio class="radio" value="0"></radio>
+      <text> 未上报 </text>
+      <radio class="radio" value="2" checked="true"></radio>
+      <text> 全部 </text>
+     </radio-group>
+    </view>
+    <view>
+      <checkbox-group bindchange="search_checkbox">
+        <checkbox></checkbox>
+        <text style="margin-right: 15rpx;"> 上报不合格 </text>
+      </checkbox-group>
+    </view> 
+  </view>
+</view>
+  <!-- 批量审核按钮组 -->
+  <view wx:if="{{(TabCur==0 || TabCur==1 ) && isTijiao}}" class="flex solid-bottom padding justify-end" style="position: fixed;z-index: 1000;width: 55%;">
+    <view class=" margin-xs radius">
+      <button role="button" class="cu-btn bg-{{bgColor}} " bindtap="batch_process" data-resulttype="0">批量提交</button>
+    </view>
+    <view class=" margin-xs radius">
+      <button role="button" class="cu-btn bg-{{bgColor}} " bindtap="batch_process" data-resulttype="1">批量不合格</button>
+    </view>
+  </view>
+<view class="text-right" style="margin-top: 6%;margin-right: 1%"> 当前状态下任务总数为：{{taskCount}} </view>
     <!-- 整改单列表图标 -->
   <view  wx:if="{{isShow == 1}}" class="cu-item" bindtap="showListModel" data-target="viewModal">
-    <text class="cuIcon-copy lg text-{{bgColor}}" style="font-size: 50rpx;position: fixed;right: 5rpx;margin-top: 50rpx;"></text>
+    <text class="cuIcon-copy lg text-{{bgColor}}" style="font-size: 50rpx;position: fixed;right: 0rpx;margin-top: 310rpx;width:80rpx"></text>
+  </view>
+  <!-- 整改时间正倒序显示 -->
+  <view class="cu-item"  data-target="viewModal" bindtap="search_finishSort">
+    <text class="cuIcon-order lg text-{{bgColor}}" style="font-size: 50rpx;position: fixed;right: 0rpx;margin-top: 230rpx;width:80rpx"></text>
   </view>
   <!-- 搜索图标 -->
   <view class="cu-item" bindtap="showSearchModal" data-target="DrawerModalL" style="{{isNull=='true'?'position: fixed;z-index: 1000;':''}}">
-    <text class="cuIcon-search lg text-{{bgColor}}" style="font-size: 50rpx;position: fixed;right: 5rpx;margin-top: 130rpx;"></text>
+    <text class="cuIcon-search lg text-{{bgColor}}" style="font-size: 50rpx;position: fixed;right: 0rpx;margin-top: 150rpx;width:80rpx"></text>
   </view>
 
   <!-- 任务列表 -->
   <checkbox-group bindchange="save_taskIds">
     <view class="cu-card article" style="{{TabCur==4?'margin-top: 60rpx;':''}}">
-      <!-- 待整改 -->
+      <!-- 常规待整改 -->
       <view wx:if="{{TabCur==0}}" wx:for="{{taskList}}" wx:key="index" class="cu-item shadow">
         <!-- 任务列表 -->
         <view class="cu-bar  solid-bottom">
           <view class="action">
-            <text class="cuIcon-news lg  text-{{bgColor}}" style="font-size:{{fontSize}}rpx"></text>
-            <view wx:if="{{item.result==1}}"><!--初次待整改-->
-              <text class="text-blue" style="font-size:{{fontSize}}rpx">待整改</text>
+            <checkbox wx:if="{{item.deptResult==1 && isTijiao}}" value="{{item.id}}" class="{{bgColor}}" />
+            <view wx:if="{{item.result == 2}}"><!--整改不合格-->
+              <view class="padding-xs">
+                  <view class="cu-tag bg-red">整改不合格</view>
+              </view>
             </view>
-            <view wx:elif="{{item.result==2}}"><!--多次待整改-->
-              <text class="text-red" style="font-size:{{fontSize}}rpx">待整改（未通过）</text>
+            <view wx:if="{{item.deptResult==1}}"><!--初次待整改-->
+              <view class="padding-xs">
+                  <view class="cu-tag bg-green">已上报</view>
+              </view>
+            </view>
+            <view wx:else>
+              <view class="padding-xs">
+                  <view class="cu-tag bg-blue">待上报</view>
+              </view>
+            </view>
+            <view wx:if="{{item.deptSubStatusOrder}}"><!--上报不合格-->
+              <view class="padding-xs">
+                  <view class="cu-tag bg-orange">上报不合格</view>
+              </view>
             </view>
           </view>
           <view class="cu-capsule round" style="margin-right: 1%;">
@@ -37,26 +86,83 @@
           </view>
         </view>
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goTaskRectify">
-          <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
-          <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks || '无'}}</text></view>
+          <view><text class="td-test" user-select="true">整改期限：{{item.finishTime}}</text></view>
+          <!-- 分割线 -->
+         <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题类型：{{item.sortListStr || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
           <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">位置描述：{{item.address}}</text></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
+        </view>
+      </view>
+      <!-- 整改单待整改 -->
+      <view wx:if="{{TabCur==1}}" wx:for="{{taskList}}" wx:key="index" class="cu-item shadow">
+        <!-- 任务列表 -->
+        <view class="cu-bar  solid-bottom">
+          <checkbox wx:if="{{item.deptResult==1 && isTijiao}}" value="{{item.id}}" class="{{bgColor}}" />
+          <view class="action">
+            <view wx:if="{{item.result == 2}}"><!--整改不合格-->
+              <view class="padding-xs">
+                  <view class="cu-tag bg-red">整改不合格</view>
+              </view>
+            </view>
+            <view wx:if="{{item.deptResult==1}}"><!--初次待整改-->
+              <view class="padding-xs">
+                  <view class="cu-tag bg-green">已上报</view>
+              </view>
+            </view>
+            <view wx:else>
+              <view class="padding-xs">
+                  <view class="cu-tag bg-blue">待上报</view>
+              </view>
+            </view>
+            <view wx:if="{{item.deptSubStatusOrder}}"><!--上报不合格-->
+              <view class="padding-xs">
+                  <view class="cu-tag bg-orange">上报不合格</view>
+              </view>
+            </view>
+          </view>
+          <view class="cu-capsule round" style="margin-right: 1%;">
+            <view class="cu-tag bg-{{bgColor}}">No.</view>
+            <view class="cu-tag line-{{bgColor}}">{{index+1}}</view>
+          </view>
+        </view>
+        <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goTaskRectify">
+          <view><text class="td-test" user-select="true">整改期限：{{item.finishTime}}</text></view>
+          <!-- 分割线 -->
+         <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题类型：{{item.sortListStr || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
         </view>
       </view>
       <!--已整改-->
-      <view wx:if="{{TabCur==1}}" wx:for="{{taskList}}" wx:key="index1" class="cu-item shadow">
+      <view wx:if="{{TabCur==2}}" wx:for="{{taskList}}" wx:key="index1" class="cu-item shadow">
         <!-- 任务列表 -->
-        <view class="flex solid-bottom padding justify-between">
-          <view class="action" style="width: 100%;">
-            <text wx:if="{{item.longTask == 1}}" style="margin-right: 5%;" class="text-{{bgColor}}" style="font-size:{{fontSize}}rpx">长</text>
-            <text wx:if="{{item.dissent == 1}}" style="margin-right: 5%;" class="text-{{bgColor}}" style="font-size:{{fontSize}}rpx">异</text>
-            <text class="cuIcon-news lg  text-{{bgColor}}" style="font-size:{{fontSize}}rpx;margin-left: 20rpx;margin-right:10rpx"></text>
-            <text class="text-blue" style="font-size:{{fontSize}}rpx">待审核</text>
+        <view class="cu-bar  solid-bottom">
+          <view class="action">
+              <view class="padding-xs">
+                  <view class="cu-tag bg-blue">待审核</view>
+              </view>
           </view>
           <view class="cu-capsule round" style="margin-right: 1%;">
             <view class="cu-tag bg-{{bgColor}}">No.</view>
@@ -64,27 +170,32 @@
           </view>
         </view>
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goTaskRectify">
-          <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
-          <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks || '无'}}</text></view>
+          <view><text class="td-test" user-select="true">整改期限：{{item.finishTime}}</text></view>
+          <!-- 分割线 -->
+         <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题类型：{{item.sortListStr || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
           <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">位置描述：{{item.address}}</text></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
         </view>
       </view>
-      <!-- 长期整改-->
       <!-- 整改合格-->
       <view wx:if="{{TabCur==3}}" wx:for="{{taskList}}" wx:key="index3" class="cu-item shadow">
-        <!-- 任务列表 -->
-        <view class="flex solid-bottom padding justify-between">
-          <view class="action" style="width: 100%;">
-            <text wx:if="{{item.longTask == 1}}" style="margin-right: 5%;" class="text-{{bgColor}}" style="font-size:{{fontSize}}rpx">长</text>
-            <text wx:if="{{item.dissent == 1}}" style="margin-right: 5%;" class="text-{{bgColor}}" style="font-size:{{fontSize}}rpx">长</text>
-            <text class="cuIcon-news lg  text-{{bgColor}}" style="font-size:{{fontSize}}rpx;margin-left: 20rpx;margin-right:10rpx"></text>
-            <text class="text-blue" style="font-size:{{fontSize}}rpx">整改合格</text>
+       <!-- 任务列表 -->
+       <view class="cu-bar  solid-bottom">
+          <view class="action">
+            <view class="padding-xs">
+                  <view class="cu-tag bg-green">整改通过</view>
+              </view>
           </view>
           <view class="cu-capsule round" style="margin-right: 1%;">
             <view class="cu-tag bg-{{bgColor}}">No.</view>
@@ -92,19 +203,25 @@
           </view>
         </view>
         <view id="task_index_{{index}}" data-taskid="{{item.id}}" data-projectid="{{item.projectId}}" bindtap="goTaskRectify">
-          <!-- <view><text class="td-test" bindlongpress="copyCode" data-key="{{item.code}}">任务编号：{{item.code}}</text></view>
-          <view class="divLine"></view> -->
-          <view><text class="td-test" user-select="true">信息描述：{{item.remarks || '无'}}</text></view>
+          <view><text class="td-test" user-select="true">整改期限：{{item.finishTime}}</text></view>
+          <!-- 分割线 -->
+         <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题类型：{{item.sortListStr || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">问题信息描述：{{item.remarks || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
           <view><text class="td-test" user-select="true">上报点位：{{item.locationName || '无'}}</text></view>
           <!-- 分割线 -->
           <view class="divLine"></view>
-          <view><text class="td-test" user-select="true">位置描述：{{item.address}}</text></view>
+          <view><text class="td-test" user-select="true">地理位置：{{item.addRemark == 'undefined'?'无':item.addRemark || '无'}}</text></view>
+          <!-- 分割线 -->
+          <view class="divLine"></view>
+          <view><text class="td-test" user-select="true">上报地点：{{item.address}}</text></view>
         </view>
       </view>
       <!-- 待审核-->
-
     </view>
   </checkbox-group>
 </view>
@@ -142,15 +259,27 @@
           <input placeholder="请输入任务编号" data-type="code" bindblur="task_code_input" value="{{task_request_dataParam.taskCode}}"></input>
         </view> -->
         <view class="cu-form-group">
-          <input placeholder="请输入点位名称" data-type="location" bindblur="task_code_input" value="{{task_request_dataParam.locationName}}"></input>
+          <input placeholder="问题类型" data-type="sort" bindblur="task_code_input" value="{{task_request_dataParam.sortName}}"></input>
         </view>
         <view class="cu-form-group">
+          <input placeholder="问题信息描述" data-type="remarks" bindblur="task_code_input" value="{{task_request_dataParam.remarks}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="点位" data-type="location" bindblur="task_code_input" value="{{task_request_dataParam.locationName}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="上报地点" data-type="address" bindblur="task_code_input" value="{{task_request_dataParam.address}}"></input>
+        </view>
+        <view class="cu-form-group">
+          <input placeholder="地理位置" data-type="addremark" bindblur="task_code_input" value="{{task_request_dataParam.addRemark}}"></input>
+        </view>
+        <!-- <view class="cu-form-group">
           <picker mode="date" value="{{task_request_dataParam.date}}" start="2017-01-01" end="2050-12-30" bindchange="DateChange">
             <view class="picker" style="text-align: left;font-size: 30rpx;">
               上报时间: {{task_request_dataParam.date}}
             </view>
           </picker>
-        </view>
+        </view> -->
         <view class="cu-form-group">
           <button bindtap="search_fun" role="button" class="cu-btn bg-{{bgColor}} margin-tb-sm lg" aria-disabled="false" style="width: 100%;">搜索</button>
         </view>

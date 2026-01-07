@@ -39,7 +39,7 @@ Page({
     let formData = e.detail.value;
     let checkRes = form.validation(formData, rules);
     if (!checkRes) {
-      // console.log("跳转")
+       console.log("跳转")
       var name = e.detail.value.name;
       var password = md5(e.detail.value.pwd);
       var openid = app.openid;
@@ -48,20 +48,23 @@ Page({
       // wx.navigateTo({
       //   url:"../menus/menu"
       // })
-
-      //调用全局 请求方法
-    app.wxRequest(
-      'POST',
-      requestUrl + '/member/manage/bindSurveyor',
-      {
+      wx.showLoading();
+      wx.request({
+        url : requestUrl + '/member/manage/bindSurveyor',
+        method : "POST",
+        data: {
           openid: openid,
           name: name,
           password: password,
           appId:app.appId
-      },
-      app.seesionId,
-      (res) =>{
-        console.log("后台传输的数据：", res)
+        },
+        header: {
+          'content-type': 'application/x-www-form-urlencoded',
+         },
+         dataType: 'json',
+         success: function (res) {
+          wx.hideLoading()
+          console.log("后台传输的数据：", res)
         if (res.data.status == 'success') {
           var list = res.data.retObj.qxRole;
           var terminalUserName = res.data.retObj.sysUserName;
@@ -76,10 +79,15 @@ Page({
             if (menu.name == '责任单位-P' || menu.name == '责任单位-T') { //整改上报
               app.deptRoleName = menu.name
               menuType = 1
-            } else if (menu.name == '创文办-P') { //整改审核
+              break;
+            } else if (menu.name == '创文办-T') { //整改审核
+              app.deptRoleName = menu.name
               menuType = 2
+              break;
             } else if (menu.name == '调查员-P') { //实地调查
+              app.deptRoleName = menu.name
               menuType = 0
+              break;
             } else { //无效有角色
               menuType = -1
             }
@@ -88,9 +96,14 @@ Page({
             wx.reLaunch({
               url: '../error_tip/error_tip?msgCode=m_10008'
             })
+          }else{
+            that.changeRole(menuType)
+            //wx.navigateBack();
+            wx.reLaunch({
+              url: '../menuBack/menuBack'
+            })
           }
-          that.changeRole(menuType)
-          wx.navigateBack();
+          
           //解决 当用户在一次使用小程序中，多次切换不同角色账号时，造成小程序值栈存满，页面无法跳转的问题
           //关闭所有页面，打开到应用内的某个页面
           // wx.reLaunch({
@@ -116,11 +129,12 @@ Page({
           })
         }
 
-      },
-      (err) =>{
-
-      }
-    )
+        },
+          fail: function (res) {
+            wx.hideLoading()
+            console.log(res)
+          },
+      })
     } else {
       wx.showToast({
         title: checkRes,
